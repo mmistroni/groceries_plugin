@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD Application</title>
+  </head>
+<body>
+  <h1>Provisions List</h1>
+  <h2>Tasks</h2>
+  <ul>
+    {% for todo in todos %}
+      <li>
+        {{ todo.task }}
+        {% if todo.completed %}
+          (Completed)
+        {% endif %}
+        <button data-todo-id="{{ todo.id }}" onclick="editTodo(this)">Edit</button>
+        <button data-todo-id="{{ todo.id }}" onclick="deleteTodo(this)">Delete</button>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h2>Add New Task</h2>
+  <form id="add-todo-form">
+    <label for="task">Task:</label>
+    <input type="text" id="task" name="task" required>
+    <button type="submit">Add Task</button>
+  </form>
+
+  <script>
+    // Sample JavaScript functions for editing and deleting todos (replace with your actual implementation)
+    function editTodo(button) {
+      const todoId = button.dataset.todoId;
+      // Call your FastAPI endpoint for editing todo with ID
+      // Update the UI based on the response
+    }
+
+    function deleteTodo(button) {
+      const todoId = button.dataset.todoId;
+      // Call your FastAPI endpoint for deleting todo with ID
+      // Remove the todo from the UI
+    }
+
+    // Handle form submission for adding a new todo using JavaScript (fetch API or similar)
+    const form = document.getElementById('add-todo-form');
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const task = document.getElementById('task').value;
+      // Send a POST request to your FastAPI endpoint for creating a new todo
+      // Clear the form and update the UI with the new todo
+    });
+  </script>
+</body>
+</html>
