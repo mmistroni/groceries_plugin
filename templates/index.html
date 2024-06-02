@@ -3,53 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRUD Application</title>
-  </head>
+  <title>Provision Management</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 5px;
+      border: 1px solid #ddd;
+    }
+    #provision-table tbody {
+      height: 400px;
+      overflow-y: scroll;
+    }
+  </style>
+</head>
 <body>
-  <h1>Provisions List</h1>
-  <h2>Tasks</h2>
-  <ul>
-    {% for todo in todos %}
-      <li>
-        {{ todo.task }}
-        {% if todo.completed %}
-          (Completed)
-        {% endif %}
-        <button data-todo-id="{{ todo.id }}" onclick="editTodo(this)">Edit</button>
-        <button data-todo-id="{{ todo.id }}" onclick="deleteTodo(this)">Delete</button>
-      </li>
-    {% endfor %}
-  </ul>
+  <h1>Provision Management</h1>
+  <p><b>Total Amount:</b> <span id="total-amount">0</span></p>
 
-  <h2>Add New Task</h2>
-  <form id="add-todo-form">
-    <label for="task">Task:</label>
-    <input type="text" id="task" name="task" required>
-    <button type="submit">Add Task</button>
-  </form>
+  <table id="provision-table">
+    <thead>
+      <tr>
+        <th>Provision Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+        <th>User</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="provision-body"></tbody>
+  </table>
+  <br>
+  <button id="create-btn">Create</button>
+  <button id="update-btn" disabled>Update</button>
+  <button id="delete-btn" disabled>Delete</button>
 
   <script>
-    // Sample JavaScript functions for editing and deleting todos (replace with your actual implementation)
-    function editTodo(button) {
-      const todoId = button.dataset.todoId;
-      // Call your FastAPI endpoint for editing todo with ID
-      // Update the UI based on the response
+    const provisionTable = document.getElementById('provision-body');
+    const createBtn = document.getElementById('create-btn');
+    const updateBtn = document.getElementById('update-btn');
+    const deleteBtn = document.getElementById('delete-btn');
+    const totalAmountSpan = document.getElementById('total-amount');
+    let selectedProvision = null; // Keeps track of selected provision for Update/Delete
+
+    // Function to fetch provisions from backend using JSON request (replace with your actual API endpoint and logic)
+    async function fetchProvisions() {
+      const response = await fetch('/api/provisions'); // Replace with your API endpoint
+      if (!response.ok) {
+        throw new Error(`Failed to fetch provisions: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data;
     }
 
-    function deleteTodo(button) {
-      const todoId = button.dataset.todoId;
-      // Call your FastAPI endpoint for deleting todo with ID
-      // Remove the todo from the UI
+    function updateTable(provisions) {
+      provisionTable.innerHTML = ""; // Clear existing rows
+      let total = 0;
+      for (const provision of provisions) {
+        const tableRow = document.createElement('tr');
+
+        const dateCell = document.createElement('td');
+        dateCell.textContent = provision.provisionDate;
+        tableRow.appendChild(dateCell);
+
+        const descriptionCell = document.createElement('td');
+        descriptionCell.textContent = provision.description;
+        tableRow.appendChild(descriptionCell);
+
+        const amountCell = document.createElement('td');
+        amountCell.textContent = provision.amount;
+        tableRow.appendChild(amountCell);
+        total += provision.amount;
+
+        const userCell = document.createElement('td');
+        userCell.textContent = provision.user;
+        tableRow.appendChild(userCell);
+
+        const actionCell = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.textContent = "Edit";
+        editBtn.addEventListener('click', () => {
+          selectedProvision = provision;
+          updateBtn.disabled = false; // Enable Update button on edit
+          deleteBtn.disabled = false; // Enable Delete button on edit
+          // Pre-fill a form or modal for editing (not shown here)
+        });
+        actionCell.appendChild(editBtn);
+        tableRow.appendChild(actionCell);
+
+        provisionTable.appendChild(tableRow);
+      }
+      totalAmountSpan.textContent = total; // Update total amount
     }
 
-    // Handle form submission for adding a new todo using JavaScript (fetch API or similar)
-    const form = document.getElementById('add-todo-form');
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const task = document.getElementById('task').value;
-      // Send a POST request to your FastAPI endpoint for creating a new todo
-      // Clear the form and update the UI with the new todo
-    });
+    window.onload = async function() {
+      try {
+        const provisions = await fetchProvisions();
+        updateTable(provisions);
+      } catch (error) {
+        console.error('Error fetching provisions:', error);
+        // Handle errors appropriately (e.g., display an error message to the user)
+      }
+    };
+
+    // Implement logic for Create, Update, and Delete buttons using your backend API (not shown here)
   </script>
 </body>
 </html>
