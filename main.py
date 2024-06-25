@@ -37,7 +37,8 @@ def add_item(item_name: str, quantity: int):
     return {"item": grocery_list[item_id]}
 
 
-@app.post("/provision/{provisionType}/{description}/{provisionDate}/{amount}/{user}")
-def add_provision(provisionType: str, description: str, provisionDate : date,
+@app.post("/provision/{provisionType}/{amount}/{description}/{provisionDate}/{user}")
+def add_provision(provisionType: str, provisionAmount:float, description: str, provisionDate : date,
                   amount : float, user : str):
-    pass
+    
+    return {"provisionType": provisionType, "amount": amount, "description": description, "provisionDate": provisionDate, "user": user}
