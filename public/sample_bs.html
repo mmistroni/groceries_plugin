@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bootstrap Example with Bootbox Dialog</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+  <link rel="stylesheet" href="/public/css/bootstrap.min.css"/>
+  <script src="/public/js/jquery-3.7.1.min.js"></script>
+  <script src="/public/js/bootstrap.js""></script>
+  <script src="/public/js/bootbox.min.js"></script>
+  
+</head>
+<body>
+  <div class="container mt-3">
+    <h1>Welcome!</h1>
+    <p>This example uses Bootstrap and Bootbox for a dialog.</p>
+    
+    <button type="button" class="btn btn-primary" id="openDialog">Open Dialog</button>
+  </div>
+
+  <script>
+    // Function to open Bootbox dialog with three fields
+    document.getElementById('openDialog').addEventListener('click', function() {
+      alert('We should opoen bbox');
+      bootbox.prompt({ // Reference Bootbox here
+        title: "Enter Details",
+        message: "<form><label for='name'>Name:</label><input type='text' id='name' class='form-control' placeholder='Enter your name'></form><br><form><label for='email'>Email:</label><input type='email' id='email' class='form-control' placeholder='Enter your email'></form><br><form><label for='message'>Message:</label><textarea id='message' class='form-control' rows='3' placeholder='Write your message'></textarea></form>",
+        buttons: {
+          confirm: {
+            label: 'Submit',
+            className: 'btn-primary'
+          },
+          cancel: {
+            label: 'Cancel',
+            className: 'btn-secondary'
+          }
+        },
+        callback: function (result) {
+          if (result) {
+            // Handle form submission with entered values (name, email, message)
+            console.log("Name:", document.getElementById('name').value);
+            console.log("Email:", document.getElementById('email').value);
+            console.log("Message:", document.getElementById('message').value);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -2,17 +2,20 @@ from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from models import Provision, ItemPayload
 from datetime import date
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 provision_list: dict[int, Provision] = {}
 grocery_list: dict[int, ItemPayload] = {}
-templates = Jinja2Templates(directory="templates/")
+templates = Jinja2Templates(directory="public/")
+
+app.mount("/public", StaticFiles(directory="public"), name="static")
 
 
 @app.get("/")
 def root(request:Request):
     result = "Type a number"
-    return templates.TemplateResponse('index.html', context={'request' : request, 'result': result})
+    return templates.TemplateResponse('sample_bs.html', context={'request' : request, 'result': result})
 
 
 @app.post("/items/{item_name}/{quantity}")
