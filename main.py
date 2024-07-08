@@ -15,6 +15,12 @@ app.mount("/public", StaticFiles(directory="public"), name="static")
 @app.get("/")
 def root(request:Request):
     result = "Type a number"
+    return templates.TemplateResponse('index.html', context={'request' : request, 'result': result})
+
+
+@app.get("/tester")
+def tester(request:Request):
+    result = "Type a number"
     return templates.TemplateResponse('sample_bs.html', context={'request' : request, 'result': result})
 
 
