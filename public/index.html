@@ -6,10 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
   <link rel="stylesheet" href="/public/css/bootstrap.min.css"/>
+  <link href= 
+"https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" 
+          rel="stylesheet" type="text/css" /> 
+    <link rel="stylesheet" href= 
+"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
   <script src="/public/js/jquery-3.7.1.min.js"></script>
   <script src="/public/js/bootstrap.js""></script>
   <script src="/public/js/bootbox.min.js"></script>
   <script src="/public/js/bootstrap.datepicker.min.js"></script>
+  <script src="/public/js/moment.js"></script>
   
   <title>Provision Management</title>
   <style>
@@ -25,6 +31,18 @@
       height: 400px;
       overflow-y: scroll;
     }
+    .modal-header .close {
+      display: none; /* Hide the close button */
+    }
+    .modal-content {
+      -webkit-border-radius: 0px !important;
+      -moz-border-radius: 0px !important;
+      border-radius: 0px !important;
+      -webkit-border: 0px !important;
+      -moz-border: 0px !important;
+      border: 0px !important;
+    }
+    
   </style>
 </head>
 <body>
@@ -67,28 +85,26 @@
     }
 
 
-    $('#create-btn').on('click', function() {
-        alert('Create btn nclicked')
-
-    });
-
     createBtn.addEventListener("click", function() {
       bootbox.dialog({
         message: `
           <form id="provisionForm">
             <div class="form-group">
-              <label for="provisionDate">Provision Date:</label>
-              <div class="input-group">
-                <input type="text" class="form-control datepicker" id="provisionDate" name="provisionDate" required>
-                  <span class="input-group-text">
-                    <i class="fas fa-calendar-alt"></i>
-                </span>
+              <div class="mb-3">
+                <label for="date" class="form-label">Date:</label>
+                <div class="input-group date" id="datepicker">
+                  <input type="text" class="form-control" id="date" required>
+                  <span class="input-group-addon">
+                    <i class="glyphicon glyphicon-calendar"></i>
+                  </span>
+                </div>
               </div>
             </div>
             <div class="form-group">
               <label for="description">Description:</label>
               <input type="text" class="form-control" id="description" name="description" required>
             </div>
+            
             <div class="form-group">
               <label for="amount">Amount:</label>
               <input type="text" class="form-control" id="amount" name="amount" required>
@@ -111,10 +127,19 @@
                 <option value="8">Other</option>
               </select>
             </div>
-            <button type="submit" class="btn btn-primary">Add</button>
+            <div class="form-group">
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
           </form>
         `,
-        buttons: {} // No default buttons
+        buttons: {},
+        onEscape:true ,
+        centerVertical: true// No default buttons
+      }).on('shown.bs.modal', function() {
+        // Initialize datepicker after modal is shown
+        $('#datepicker').datepicker({
+          autoclose:true
+        });
       });
   
       // Handle form submission within the popup (optional)
@@ -123,15 +148,24 @@
         event.preventDefault(); // Prevent default form submission
   
         // Access form data here (e.g., using formData or form elements)
-        const name = document.getElementById("name").value;
-        const surname = document.getElementById("surname").value;
-        const address = document.getElementById("address").value;
+        var selectedDate = $(this).datepicker('getDate');
+
+        // Format the date using moment.js
+        var formattedDate = moment(selectedDate).format('YYYYMMDD'); // Adjust format as needed
+        console.log('Formatted date:', formattedDate);
+        const amount = document.getElementById("amount").value;
+        const desc = document.getElementById("description").value;
+        const user = document.getElementById("user").value;
+        const provtype = document.getElementById("provisionType").value;  
+        console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtype}`);
   
-        console.log(`Name: ${name}, Surname: ${surname}, Address: ${address}`);
-  
+        const submitUrl = `/provision/${provtype}/${amount}/${desc}/${formattedDate}/${user}`
+        console.info('We shoud submit to:' + submitUrl);
+
+        
         // Perform any actions with the data (e.g., send to server)
         // ...
-  
+        alert('submit')
         bootbox.hideAll(); // Close the popup after processing
       });
     });
