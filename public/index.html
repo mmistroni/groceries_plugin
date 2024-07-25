@@ -81,6 +81,7 @@
         throw new Error(`Failed to fetch provisions: ${response.statusText}`);
       }
       const data = await response.json();
+      // we should populate table
       return data;
     }
 
@@ -162,7 +163,10 @@
         const submitUrl = `/provision/${provtype}/${amount}/${desc}/${formattedDate}/${user}`
         console.info('We shoud submit to:' + submitUrl);
 
-        
+        fetch('addprovision', {
+          method: 'POST',
+          body:userForm
+        })
         // Perform any actions with the data (e.g., send to server)
         // ...
         alert('submit')

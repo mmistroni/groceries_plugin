@@ -45,9 +45,20 @@ def add_item(item_name: str, quantity: int):
 
     return {"item": grocery_list[item_id]}
 
-
 @app.post("/provision/{provisionType}/{amount}/{description}/{provisionDate}/{user}")
-def add_provision(provisionType: str, provisionAmount:float, description: str, provisionDate : date,
-                  amount : float, user : str):
+def add_provision(provisionType: int, provisionAmount:float, description: str, provisionDate : str,
+                  user : str):
     
     return {"provisionType": provisionType, "amount": amount, "description": description, "provisionDate": provisionDate, "user": user}
+
+@app.post("/addprovision/")
+def post_provision():
+    
+    # we should use this method and fetch provision
+    return {"provisionType": 1, "amount": 2, "description": "description", "provisionDate": "20240114", "user": "marco"}
+
+@app.get("/api/provisions")
+def get_provision():
+    
+    # we should use this method and fetch provision
+    return provision_list.values()
