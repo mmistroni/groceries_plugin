@@ -94,7 +94,7 @@
               <div class="mb-3">
                 <label for="date" class="form-label">Date:</label>
                 <div class="input-group date" id="datepicker">
-                  <input type="text" class="form-control" id="date" required>
+                  <input type="text" class="form-control" id="provisionDate" required>
                   <span class="input-group-addon">
                     <i class="glyphicon glyphicon-calendar"></i>
                   </span>
@@ -163,13 +163,13 @@
         const submitUrl = `/provision/${provtype}/${amount}/${desc}/${formattedDate}/${user}`
         console.info('We shoud submit to:' + submitUrl);
 
-        fetch('addprovision', {
+        fetch('/addprovision', {
           method: 'POST',
           body:userForm
         })
         // Perform any actions with the data (e.g., send to server)
         // ...
-        alert('submit')
+        window.location.reload();
         bootbox.hideAll(); // Close the popup after processing
       });
     });

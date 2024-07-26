@@ -3,6 +3,7 @@ from fastapi.templating import Jinja2Templates
 from models import Provision, ItemPayload
 from datetime import date
 from fastapi.staticfiles import StaticFiles
+import random
 
 app = FastAPI()
 provision_list: dict[int, Provision] = {}
@@ -51,14 +52,22 @@ def add_provision(provisionType: int, provisionAmount:float, description: str, p
     
     return {"provisionType": provisionType, "amount": amount, "description": description, "provisionDate": provisionDate, "user": user}
 
-@app.post("/addprovision/")
-def post_provision():
-    
+@app.post("/addprovision")
+def post_provision(provision : Provision):
+    provision_id = _generate_random_int()
+    provision_list[provision_id] = provision
     # we should use this method and fetch provision
-    return {"provisionType": 1, "amount": 2, "description": "description", "provisionDate": "20240114", "user": "marco"}
+    return {"status": "SUCCESS"}
 
 @app.get("/api/provisions")
 def get_provision():
     
     # we should use this method and fetch provision
     return provision_list.values()
+
+
+def _generate_random_int() -> int:
+  """Generates a random integer without a specific range."""
+  return random.getrandbits(64)
+
+# table with filters https://designeradeeba.medium.com/building-a-table-filter-using-bootstrap-and-javascript-4edab0ed606e
