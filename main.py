@@ -4,6 +4,7 @@ from models import Provision, ItemPayload
 from datetime import date
 from fastapi.staticfiles import StaticFiles
 import random
+from typing import List
 
 app = FastAPI()
 provision_list: dict[int, Provision] = {}
@@ -60,10 +61,10 @@ def post_provision(provision : Provision):
     return {"status": "SUCCESS"}
 
 @app.get("/api/provisions")
-def get_provision():
+def get_provision() -> List[Provision]:
     
     # we should use this method and fetch provision
-    return provision_list.values()
+    return [p for p in provision_list.values()]
 
 
 def _generate_random_int() -> int:
