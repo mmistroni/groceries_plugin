@@ -7,7 +7,12 @@ import random
 from typing import List
 
 app = FastAPI()
-provision_list: dict[int, Provision] = {}
+
+
+provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=1, provisionAmount=10.0, description="Eggs", provisionDate='2024-08-02', user="XXXXX"),
+                                         2 : Provision(id=2, provisionType=2, provisionAmount=100.0, description="Council", provisionDate='2024-08-02', user="XXXXX"),
+                                         3 : Provision(id=3, provisionType=3, provisionAmount=1000.0, description="Car", provisionDate='2024-08-02', user="XXXXX")
+                                         }
 grocery_list: dict[int, ItemPayload] = {}
 templates = Jinja2Templates(directory="public/")
 
@@ -50,8 +55,9 @@ def add_item(item_name: str, quantity: int):
 @app.post("/provision/{provisionType}/{amount}/{description}/{provisionDate}/{user}")
 def add_provision(provisionType: int, provisionAmount:float, description: str, provisionDate : str,
                   user : str):
+    provision_id = _generate_random_int()
     
-    return {"provisionType": provisionType, "amount": amount, "description": description, "provisionDate": provisionDate, "user": user}
+    return {"status": "SUCCESS"}
 
 @app.post("/addprovision")
 def post_provision(provision : Provision):
@@ -72,3 +78,15 @@ def _generate_random_int() -> int:
   return random.getrandbits(64)
 
 # table with filters https://designeradeeba.medium.com/building-a-table-filter-using-bootstrap-and-javascript-4edab0ed606e
+'''
+
+from fastapi import FastAPI, Form
+
+app = FastAPI()
+
+@app.post("/submit_form")
+async def create_item(name: str = Form(...), surname: str = Form(...), age: int = Form(...)):
+    return {"name": name, "surname": surname, "age": age}
+
+
+'''

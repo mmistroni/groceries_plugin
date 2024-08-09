@@ -7,9 +7,9 @@ from datetime import date
 class Provision(BaseModel):
   id: Optional[int]
   description: str
-  provisionType:str
+  provisionType:int
   provisionDate:str
-  amount:float
+  provisionAmount:float
   user:str
   
 class ItemPayload(BaseModel):

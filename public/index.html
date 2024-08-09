@@ -147,26 +147,47 @@
       const userForm = document.getElementById("provisionForm");
       userForm.addEventListener("submit", function(event) {
         event.preventDefault(); // Prevent default form submission
-  
+        alert('Button c licked')
         // Access form data here (e.g., using formData or form elements)
-        var selectedDate = $(this).datepicker('getDate');
-
-        // Format the date using moment.js
-        var formattedDate = moment(selectedDate).format('YYYYMMDD'); // Adjust format as needed
+        var formattedDate = '2021-11-11' //moment(selectedDate).format('YYYYMMDD'); // Adjust format as needed
         console.log('Formatted date:', formattedDate);
-        const amount = document.getElementById("amount").value;
+        const amountString = document.getElementById("amount").value;
+        const amount = parseFloat(amountString)
         const desc = document.getElementById("description").value;
         const user = document.getElementById("user").value;
-        const provtype = document.getElementById("provisionType").value;  
+        const provtypeString = document.getElementById("provisionType").value; 
+        const provtype = parseInt(provtypeString, 10) 
         console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtype}`);
   
         const submitUrl = `/provision/${provtype}/${amount}/${desc}/${formattedDate}/${user}`
         console.info('We shoud submit to:' + submitUrl);
 
-        fetch('/addprovision', {
+        const myFormDict = {
+          "id": 0,
+          "description": desc,
+          "provisionType": provtype,
+          "provisionDate": "2024-08-09",
+          "provisionAmount": amount,
+          "user": user
+        }
+
+        const postData = JSON.stringify(myFormDict);        
+        alert('posting ' + submitUrl)
+        
+        const options = {
           method: 'POST',
-          body:userForm
-        })
+          headers: {"content-type": "application/json"},
+          body: postData
+          };
+          
+          fetch('/addprovision', options)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+              }})
+          .then(data => console.log(data)) // Handle the response
+          .catch(error => console.error('Error:', error));
+        
         // Perform any actions with the data (e.g., send to server)
         // ...
         window.location.reload();
