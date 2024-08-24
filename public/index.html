@@ -147,9 +147,13 @@
       const userForm = document.getElementById("provisionForm");
       userForm.addEventListener("submit", function(event) {
         event.preventDefault(); // Prevent default form submission
-        alert('Button c licked')
+
+        const datepickerElement = document.getElementById('datepicker');  
+        const selectedDate = datepickerElement.value;
+        const parsedDate = new Date(selectedDate);
+        const formattedDate = moment(selectedDate).format('YYYYMMDD')
+        alert('Button c licked:' + formattedDate)
         // Access form data here (e.g., using formData or form elements)
-        var formattedDate = '2021-11-11' //moment(selectedDate).format('YYYYMMDD'); // Adjust format as needed
         console.log('Formatted date:', formattedDate);
         const amountString = document.getElementById("amount").value;
         const amount = parseFloat(amountString)
@@ -166,7 +170,7 @@
           "id": 0,
           "description": desc,
           "provisionType": provtype,
-          "provisionDate": "2024-08-09",
+          "provisionDate": formattedDate,
           "provisionAmount": amount,
           "user": user
         }
@@ -184,14 +188,16 @@
           .then(response => {
             if (!response.ok) {
               throw new Error('Network response was not ok');
+              } else {
+                window.location.reload();
+                bootbox.hideAll();
               }})
           .then(data => console.log(data)) // Handle the response
           .catch(error => console.error('Error:', error));
         
         // Perform any actions with the data (e.g., send to server)
         // ...
-        window.location.reload();
-        bootbox.hideAll(); // Close the popup after processing
+         // Close the popup after processing
       });
     });
 
@@ -212,9 +218,9 @@
         tableRow.appendChild(descriptionCell);
 
         const amountCell = document.createElement('td');
-        amountCell.textContent = provision.amount;
+        amountCell.textContent = provision.provisionAmount;
         tableRow.appendChild(amountCell);
-        total += provision.amount;
+        total += provision.provisionAmount;
 
         const userCell = document.createElement('td');
         userCell.textContent = provision.user;

@@ -70,8 +70,8 @@ def post_provision(provision : Provision):
 def get_provision() -> List[Provision]:
     
     # we should use this method and fetch provision
-    return [p for p in provision_list.values()]
-
+    data =  [p for p in provision_list.values()]
+    return data
 
 def _generate_random_int() -> int:
   """Generates a random integer without a specific range."""
