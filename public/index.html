@@ -54,6 +54,7 @@
       <tr>
         <th>Provision Date</th>
         <th>Description</th>
+        <th>Provision Type</th>
         <th>Amount</th>
         <th>User</th>
         <th>Actions</th>
@@ -118,14 +119,14 @@
             <div class="form-group">
               <label for="role">ProvisionType:</label>
               <select class="form-control" id="provisionType" name="provisionType" required>
-                <option value="1">Car</option>
-                <option value="2">TV</option>
-                <option value="3">Phone</option>
-                <option value="4">Gas</option>
-                <option value="5">Council</option>
-                <option value="6">House Insurance</option>
-                <option value="7">Life Insurance</option>
-                <option value="8">Other</option>
+                <option value="CAR">Car</option>
+                <option value="TV">TV</option>
+                <option value="PHONE">Phone</option>
+                <option value="GAS">Gas</option>
+                <option value="COUNCIL">Council</option>
+                <option value="HOUSE_INSURANCE">House Insurance</option>
+                <option value="LIFE_INSURANCE">Life Insurance</option>
+                <option value="OTHER">Other</option>
               </select>
             </div>
             <div class="form-group">
@@ -160,31 +161,26 @@
         const desc = document.getElementById("description").value;
         const user = document.getElementById("user").value;
         const provtypeString = document.getElementById("provisionType").value; 
-        const provtype = parseInt(provtypeString, 10) 
-        console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtype}`);
+        console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtypeString}`);
   
-        const submitUrl = `/provision/${provtype}/${amount}/${desc}/${formattedDate}/${user}`
-        console.info('We shoud submit to:' + submitUrl);
-
+        
         const myFormDict = {
           "id": 0,
           "description": desc,
-          "provisionType": provtype,
+          "provisionType": provtypeString,
           "provisionDate": formattedDate,
           "provisionAmount": amount,
           "user": user
         }
 
         const postData = JSON.stringify(myFormDict);        
-        alert('posting ' + submitUrl)
-        
         const options = {
           method: 'POST',
           headers: {"content-type": "application/json"},
           body: postData
           };
           
-          fetch('/addprovision', options)
+          fetch('/addprovision2', options)
           .then(response => {
             if (!response.ok) {
               throw new Error('Network response was not ok');
@@ -217,6 +213,12 @@
         descriptionCell.textContent = provision.description;
         tableRow.appendChild(descriptionCell);
 
+        
+        const provisionTypeCell = document.createElement('td');
+        provisionTypeCell.textContent = provision.provisionTypeName;
+        tableRow.appendChild(provisionTypeCell);
+        
+        
         const amountCell = document.createElement('td');
         amountCell.textContent = provision.provisionAmount;
         tableRow.appendChild(amountCell);

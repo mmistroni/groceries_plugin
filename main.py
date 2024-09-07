@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
-from models import Provision, ItemPayload
+from models import Provision, ItemPayload, ProvisionType
 from datetime import date
 from fastapi.staticfiles import StaticFiles
 import random
@@ -9,9 +9,9 @@ from typing import List
 app = FastAPI()
 
 
-provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=1, provisionAmount=10.0, description="Eggs", provisionDate='2024-08-02', user="XXXXX"),
-                                         2 : Provision(id=2, provisionType=2, provisionAmount=100.0, description="Council", provisionDate='2024-08-02', user="XXXXX"),
-                                         3 : Provision(id=3, provisionType=3, provisionAmount=1000.0, description="Car", provisionDate='2024-08-02', user="XXXXX")
+provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=ProvisionType.CAR, provisionAmount=10.0, description="Eggs", provisionDate='2024-08-02', user="XXXXX"),
+                                         2 : Provision(id=2, provisionType=ProvisionType.COUNCIL, provisionAmount=100.0, description="Council", provisionDate='2024-08-02', user="XXXXX"),
+                                         3 : Provision(id=3, provisionType=ProvisionType.LIFE_INSURANCE, provisionAmount=1000.0, description="Car", provisionDate='2024-08-02', user="XXXXX")
                                          }
 grocery_list: dict[int, ItemPayload] = {}
 templates = Jinja2Templates(directory="public/")
@@ -59,15 +59,33 @@ def add_provision(provisionType: int, provisionAmount:float, description: str, p
     
     return {"status": "SUCCESS"}
 
-@app.post("/addprovision")
-def post_provision(provision : Provision):
+@app.post("/addprovision2")
+async def post_provision2(request : Request):
     provision_id = _generate_random_int()
-    provision_list[provision_id] = provision
+    request_data = await request.json()
+    
+    provision_type_string = request_data.get("provisionType")
+    provision_type_enum = ProvisionType[provision_type_string]
+
+
+    
+    
+    new_provision = Provision(
+        id=provision_id,
+        provisionType=provision_type_enum,
+        provisionAmount=request_data['provisionAmount'],
+        description=request_data['description'],
+        provisionDate=request_data['provisionDate'],
+        user=request_data['user']
+    )
+    provision_list[provision_id] = new_provision
     # we should use this method and fetch provision
     return {"status": "SUCCESS"}
 
+
+
 @app.get("/api/provisions")
-def get_provision() -> List[Provision]:
+async def get_provision() -> List[Provision]:
     
     # we should use this method and fetch provision
     data =  [p for p in provision_list.values()]
