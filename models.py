@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing import Optional
 from datetime import date
 #https://code.visualstudio.com/docs/python/tutorial-fastapi
@@ -17,24 +17,33 @@ class ProvisionType(Enum):
     HOUSE_INSURANCE = 6,
     LIFE_INSURANCE = 7,
     OTHER = 8
+    
+    def __str__(self):
+        return f"{self.name}"
+    def from_integer(val:int) -> str:
+        for  provision_type in ProvisionType:
+            if provision_type == val:
+                return provision_type.name
+def get_provision_type_name(provision_type: ProvisionType) -> str:
+    return provision_type.name
 
 class Provision(BaseModel):
   id: Optional[int]
   description: str
-  provisionType:ProvisionType
+  provisionType:ProvisionType  
   provisionDate:str
   provisionAmount:float
   user:str
-
-  @property
-  def provisionTypeName(self):
-        return self.provisionType.name
-      
+  
   class Config:
-        extra = "forbid"  # Optional: Prevent unexpected fields
-        orm_mode = True  # Optional: For ORM integration
-        arbitrary_types_allowed = True  # Allow custom types like enums
-        fields = {"provisionTypeName"}  # Include the custom property in serialization
+    use_enum_values = False
+  
+  @computed_field(return_type=str)
+  def total_cost(self):
+    return ProvisionType.from_integer(self.provisionType)
+
+   
+    
 
 
 

@@ -203,8 +203,10 @@
       provisionTable.innerHTML = ""; // Clear existing rows
       let total = 0;
       for (const provision of provisions) {
+        console.log(provision);
         const tableRow = document.createElement('tr');
-
+        // need to convert enum integer to a string
+        console.log('--provision:' + provision.name)
         const dateCell = document.createElement('td');
         dateCell.textContent = provision.provisionDate;
         tableRow.appendChild(dateCell);
@@ -215,7 +217,7 @@
 
         
         const provisionTypeCell = document.createElement('td');
-        provisionTypeCell.textContent = provision.provisionTypeName;
+        provisionTypeCell.textContent = provision.total_cost;
         tableRow.appendChild(provisionTypeCell);
         
         
