@@ -54,8 +54,8 @@
   <h1>Provision Management</h1>
   <p><b>Total Amount:</b> <span id="total-amount">0</span></p>
 
-  <label for="selectField">Select a Value:</label>
-  <select id="selectField">
+  <label for="optionList">Select a Value:</label>
+  <select id="optionList">
     <option value=""></option>
     <option value="CAR">Car</option>
     <option value="TV">TV</option>
@@ -98,7 +98,11 @@
 
     // Function to fetch provisions from backend using JSON request (replace with your actual API endpoint and logic)
     async function fetchProvisions() {
-      const response = await fetch('/api/provisions'); // Replace with your API endpoint
+
+      const option = document.getElementById("optionList").value;
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+      const response = await fetch(`/api/provisions?option=${option}&start=${start}&end=${end}`);   
       if (!response.ok) {
         throw new Error(`Failed to fetch provisions: ${response.statusText}`);
       }

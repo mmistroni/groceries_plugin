@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.templating import Jinja2Templates
 from models import Provision, ItemPayload, ProvisionType
-from datetime import date
+from datetime import date, datetime
 from fastapi.staticfiles import StaticFiles
+import logging
 import random
 from typing import List
 
@@ -85,10 +86,27 @@ async def post_provision2(request : Request):
 
 
 @app.get("/api/provisions")
-async def get_provision() -> List[Provision]:
+async def get_provision(
+    option: str = Query(None),
+    start: str = Query(None),
+    end: str = Query(None)
+    ) -> List[Provision]:
     
     # we should use this method and fetch provision
     data =  [p for p in provision_list.values()]
+    
+    if option:
+        # Filter provisions based on the option
+        # ...
+        logging.info(f'Selected option:{option}')
+
+    if  start and end:
+        logging.info(f'start type:{type(start)}')
+        cob_start = datetime.strptime(start, '%Y-%m-%d').date()
+        cob_end = datetime.strptime(end, '%Y-%m-%d').date()
+        
+        data = [p for p in data if datetime.strptime(p.provisionDate, '%Y-%m-%d',).date() >= cob_start \
+                        and datetime.strptime(p.provisionDate, '%Y-%m-%d').date() <= cob_end]
     return data
 
 def _generate_random_int() -> int:
