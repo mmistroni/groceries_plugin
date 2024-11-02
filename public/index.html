@@ -91,6 +91,32 @@
   <button id="create-btn">Create</button>
   
   <script>
+
+    const today = new Date();
+    const endOfYear = new Date(today.getFullYear(), 11, 31); // December 31st of the current year
+
+    // Format the date as "YYYY-MM-DD"
+    const formattedEndOfYear = endOfYear.toISOString().split('T')[0];
+
+    // Set the value of the input field
+    document.getElementById("endDate").value = formattedEndOfYear;
+
+    // Adding event listeners
+    const selectField = document.getElementById('optionList');
+    const startDateField = document.getElementById('startDate');
+    const endDateField = document.getElementById('endDate');
+
+    selectField.addEventListener('change', () => {
+      alert('field was selected')
+      reloadPage();
+    });
+      
+  
+    
+
+
+
+
     const provisionTable = document.getElementById('provision-body');
     const createBtn = document.getElementById('create-btn');
     const totalAmountSpan = document.getElementById('total-amount');
@@ -286,7 +312,7 @@
       totalAmountSpan.textContent = total; // Update total amount
     }
 
-    window.onload = async function() {
+    async function reloadPage() {
       try {
         const provisions = await fetchProvisions();
         updateTable(provisions);
@@ -295,6 +321,10 @@
         // Handle errors appropriately (e.g., display an error message to the user)
       }
     };
+
+
+
+    window.onload = reloadPage()
 
     // Implement logic for Create, Update, and Delete buttons using your backend API (not shown here)
   </script>

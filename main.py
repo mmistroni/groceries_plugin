@@ -10,9 +10,12 @@ from typing import List
 app = FastAPI()
 
 
-provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=ProvisionType.CAR, provisionAmount=10.0, description="Eggs", provisionDate='2024-08-02', user="XXXXX"),
-                                         2 : Provision(id=2, provisionType=ProvisionType.COUNCIL, provisionAmount=100.0, description="Council", provisionDate='2024-08-02', user="XXXXX"),
-                                         3 : Provision(id=3, provisionType=ProvisionType.LIFE_INSURANCE, provisionAmount=1000.0, description="Car", provisionDate='2024-08-02', user="XXXXX")
+provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=ProvisionType.CAR, provisionAmount=10.0, description="Eggs", 
+                                                       provisionDate=date(2024,8,2), user="XXXXX"),
+                                         2 : Provision(id=2, provisionType=ProvisionType.COUNCIL, provisionAmount=100.0, description="Council", 
+                                                       provisionDate=date(2024,9,2), user="XXXXX"),
+                                         3 : Provision(id=3, provisionType=ProvisionType.LIFE_INSURANCE, provisionAmount=1000.0, description="Car", 
+                                                       provisionDate=date(2024,9,20), user="XXXXX")
                                          }
 grocery_list: dict[int, ItemPayload] = {}
 templates = Jinja2Templates(directory="public/")
@@ -68,15 +71,13 @@ async def post_provision2(request : Request):
     provision_type_string = request_data.get("provisionType")
     provision_type_enum = ProvisionType[provision_type_string]
 
-
-    
     
     new_provision = Provision(
         id=provision_id,
         provisionType=provision_type_enum,
         provisionAmount=request_data['provisionAmount'],
         description=request_data['description'],
-        provisionDate=request_data['provisionDate'],
+        provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d'),
         user=request_data['user']
     )
     provision_list[provision_id] = new_provision
@@ -99,14 +100,17 @@ async def get_provision(
         # Filter provisions based on the option
         # ...
         logging.info(f'Selected option:{option}')
+        filtered = [p for p in data if p.provisionType.name == option]
+        logging.info(f'Obtained:{len(data)}')
+        return filtered
 
     if  start and end:
         logging.info(f'start type:{type(start)}')
         cob_start = datetime.strptime(start, '%Y-%m-%d').date()
         cob_end = datetime.strptime(end, '%Y-%m-%d').date()
         
-        data = [p for p in data if datetime.strptime(p.provisionDate, '%Y-%m-%d',).date() >= cob_start \
-                        and datetime.strptime(p.provisionDate, '%Y-%m-%d').date() <= cob_end]
+        return [p for p in data if p.provisionDate >= cob_start \
+                        and p.provisionDate <= cob_end]
     return data
 
 def _generate_random_int() -> int:

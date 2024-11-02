@@ -31,7 +31,7 @@ class Provision(BaseModel):
   id: Optional[int]
   description: str
   provisionType:ProvisionType  
-  provisionDate:str
+  provisionDate:date
   provisionAmount:float
   user:str
   
