@@ -4,14 +4,16 @@
   <!-- https://getbootstrap.com/docs/5.0/getting-started/introduction/-->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/public/css/fontawesomeall.min.css">
   <link rel="stylesheet" href="/public/css/bootstrap.min.css"/>
+  <link rel="stylesheet"  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link href= 
 "https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" 
           rel="stylesheet" type="text/css" /> 
     <link rel="stylesheet" href= 
 "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
   <script src="/public/js/jquery-3.7.1.min.js"></script>
+  <script src="/public/js/bootstrap.js""></script>
   <script src="/public/js/bootstrap.js""></script>
   <script src="/public/js/bootbox.min.js"></script>
   <script src="/public/js/bootstrap.datepicker.min.js"></script>
@@ -52,7 +54,7 @@
 </head>
 <body>
   <h1>Provision Management</h1>
-  <p><b>Total Amount:</b> <span id="total-amount">0</span></p>
+  <p><b>Total Amount:</b> <span id="total-amount">0</span><i class="fa-brands fa-twitter"></i></p>
 
   <label for="optionList">Select a Value:</label>
   <select id="optionList">
@@ -107,16 +109,10 @@
     const endDateField = document.getElementById('endDate');
 
     selectField.addEventListener('change', () => {
-      alert('field was selected')
       reloadPage();
     });
       
   
-    
-
-
-
-
     const provisionTable = document.getElementById('provision-body');
     const createBtn = document.getElementById('create-btn');
     const totalAmountSpan = document.getElementById('total-amount');
@@ -202,7 +198,6 @@
         const selectedDate = datepickerElement.value;
         const parsedDate = new Date(selectedDate);
         const formattedDate = moment(selectedDate).format('YYYYMMDD')
-        alert('Button c licked:' + formattedDate)
         // Access form data here (e.g., using formData or form elements)
         console.log('Formatted date:', formattedDate);
         const amountString = document.getElementById("amount").value;
@@ -281,7 +276,7 @@
 
         const actionCell = document.createElement('td');
         const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<span class="glyphicon glyphicon-edit"></span> Edit';
+        editBtn.innerHTML = '<i class="fa-solid fa-edit"></i>';
         //editBtn.textContent = "Edit";
         editBtn.addEventListener('click', () => {
           alert('We need to edit')
@@ -294,7 +289,7 @@
         actionCell.appendChild(editBtn);
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete';
+        deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
         deleteBtn.addEventListener('click', () => {
           alert('We need to delete')
           selectedProvision = provision;
