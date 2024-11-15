@@ -85,6 +85,18 @@ async def post_provision2(request : Request):
     return {"status": "SUCCESS"}
 
 
+@app.post("/deleteprovision/")
+async def deleteProvision(request : Request):
+    
+    request_data = await request.json()
+    provision_id = int(request_data.get("id"))
+    logging.info(f'We should delete provision with id:{provision_id}')
+    
+    provision_list.pop(provision_id);
+    
+    return {"status": "SUCCESS"}
+
+
 
 @app.get("/api/provisions")
 async def get_provision(

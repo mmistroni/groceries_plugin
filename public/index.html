@@ -188,6 +188,10 @@
           autoclose:true
         });
       });
+
+      
+
+
   
       // Handle form submission within the popup (optional)
       const userForm = document.getElementById("provisionForm");
@@ -241,6 +245,37 @@
       });
     });
 
+    function initializeBootboxDialog(title, nameValue, surnameValue, addressValue) {
+      bootbox.prompt({
+          title: title,
+          inputType: 'input',
+          message: '<div class="form-group">' +
+              '<label>Name:</label>' +
+              '<input type="text" class="form-control" id="name" value="' + nameValue + '">' +
+              '</div>' +
+              '<div class="form-group">' +
+              '<label>Surname:</label>' +
+              '<input type="text" class="form-control" id="surname" value="' + surnameValue + '">' +
+              '</div>' +
+              '<div class="form-group">' +
+              '<label>Address:</label>' +
+              '<input type="text" class="form-control" id="address" value="' + addressValue + '">' +
+              '</div>',
+          callback: function(result) {
+              if (result) {
+                  // Access the values using document.getElementById
+                  var name = document.getElementById('name').value;
+                  var surname = document.getElementById('surname').value;
+                  var address = document.getElementById('address').value;   
+  
+                  console.log(name, surname, address);
+                  // You can further process the values here
+              }
+          }
+      });
+  }
+
+
 
 
     function updateTable(provisions) {
@@ -279,7 +314,7 @@
         editBtn.innerHTML = '<i class="fa-solid fa-edit"></i>';
         //editBtn.textContent = "Edit";
         editBtn.addEventListener('click', () => {
-          alert('We need to edit')
+          alert('We need to edit provision:' + provision.description);
           selectedProvision = provision;
           
           // Pre-fill a form or modal for editing (not shown here)
@@ -291,8 +326,31 @@
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
         deleteBtn.addEventListener('click', () => {
-          alert('We need to delete')
+          alert('We need to delete provision with id:' + provision.id);
           selectedProvision = provision;
+
+          const myFormDict = {
+            "id": selectedProvision.id
+          }   
+          const postData = JSON.stringify(myFormDict);     
+          const options = {
+            method: 'POST',
+            headers: {"content-type": "application/json"},
+            body: postData
+            };
+
+
+          fetch('/deleteprovision/', options)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+              } else {
+                window.location.reload();
+                bootbox.hideAll();
+              }})
+          .then(data => console.log(data)) // Handle the response
+          .catch(error => console.error('Error:', error));
+          
           // Pre-fill a form or modal for editing (not shown here)
         });
 
