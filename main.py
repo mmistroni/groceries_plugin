@@ -85,6 +85,29 @@ async def post_provision2(request : Request):
     return {"status": "SUCCESS"}
 
 
+@app.post("/updateprovision2")
+async def post_provision2(request : Request):
+    request_data = await request.json()
+    
+    provision_id = int(request_data.get("id"))    
+    provision_type_string = request_data.get("provisionType")
+    provision_type_enum = ProvisionType[provision_type_string]
+
+    existing = provision_list.get(provision_id);
+    existing.provisionType=provision_type_enum,
+    existing.provisionAmount=float(request_data['provisionAmount']),
+    existing.description=request_data['description'],
+    existing.provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d'),
+    existing.user=request_data['user']
+    
+    
+    return {"status": "SUCCESS"}
+
+
+
+
+
+
 @app.post("/deleteprovision/")
 async def deleteProvision(request : Request):
     

@@ -193,7 +193,7 @@
     });
 
     function initializeBootboxDialog(provisionDate = '', provisionType='',
-                      description = '', amount = '0', user='', update=false) {
+                      description = '', amount = '0', user='', provisionId=-1,update=false) {
 
       var btnText = 'Add';
       if (update) {
@@ -206,6 +206,7 @@
                 '<label for="date" class="form-label">Date:</label>' +
                 '<div class="input-group date" id="datepicker">' +
                   '<input type="text" class="form-control" id="provisionDate"  value="' + provisionDate + '">' +
+                  '<input type="hidden" id="id"  value="' + provisionId + '">' + 
                   '<span class="input-group-addon">' +
                     '<i class="glyphicon glyphicon-calendar"></i>' +
                   '</span>' +
@@ -300,7 +301,7 @@
           initializeBootboxDialog(provision.provisionDate, 
                   provisionType=provision.provisionType,
                   provision.description, provision.provisionAmount, 
-                  provision.user, true);
+                  provision.user, provision.id, true);
       
           // Handle form submission within the popup (optional)
           const userForm = document.getElementById("provisionForm");
@@ -322,7 +323,7 @@
       
             
             const myFormDict = {
-              "id": 0,
+              "id": provision.id,
               "description": desc,
               "provisionType": provtypeString,
               "provisionDate": formattedDate,
@@ -337,7 +338,7 @@
               body: postData
               };
               
-              fetch('/updateProvision', options)
+              fetch('/updateprovision', options)
               .then(response => {
                 if (!response.ok) {
                   throw new Error('Network response was not ok');
