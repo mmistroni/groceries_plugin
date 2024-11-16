@@ -134,12 +134,12 @@
     }
 
 
+   
+
     createBtn.addEventListener("click", function() {
-      initializeBootboxDialog();
+      alert('Creating');
+      initializeBootboxDialog('', '', '', '', '');
       
-
-
-  
       // Handle form submission within the popup (optional)
       const userForm = document.getElementById("provisionForm");
       userForm.addEventListener("submit", function(event) {
@@ -192,14 +192,20 @@
       });
     });
 
-    function initializeBootboxDialog() {
+    function initializeBootboxDialog(provisionDate = '', provisionType='',
+                      description = '', amount = '0', user='', update=false) {
+
+      var btnText = 'Add';
+      if (update) {
+        btnText = 'Update'
+      }                  
       bootbox.dialog({
         message: 
           '<form id="provisionForm">' +
             '<div class="form-group">' +
                 '<label for="date" class="form-label">Date:</label>' +
                 '<div class="input-group date" id="datepicker">' +
-                  '<input type="text" class="form-control" id="provisionDate" required>' +
+                  '<input type="text" class="form-control" id="provisionDate"  value="' + provisionDate + '">' +
                   '<span class="input-group-addon">' +
                     '<i class="glyphicon glyphicon-calendar"></i>' +
                   '</span>' +
@@ -207,7 +213,7 @@
             '</div>' +
             '<div class="form-group">' +
               '<label for="role">ProvisionType:</label>' +
-              '<select class="form-control" id="provisionType" name="provisionType">' +
+              '<select class="form-control" id="provisionType" name="provisionType" value="' + provisionType + '">'  +
                 '<option value="CAR">Car</option>' +
                 '<option value="TV">TV</option>' +
                 '<option value="PHONE">Phone</option>' +
@@ -220,19 +226,19 @@
             '</div>' +
             '<div class="form-group">' +
               '<label for="description">Description:</label>' +
-              '<input type="text" class="form-control" id="description" name="description" required>' +
+              '<input type="text" class="form-control" id="description" name="description" value="' + description + '">'  +
             '</div>' +
             '<div class="form-group">' +
               '<label for="amount">Amount:</label>' +
-              '<input type="text" class="form-control" id="amount" name="amount" required>' +
+              '<input type="text" class="form-control" id="amount" name="amount" value="' + amount +'">' +
             '</div>' +
             '<div class="form-group">' +
               '<label for="user">User:</label>' +
-              '<input type="text" class="form-control" id="user" name="user" required>' +
+              '<input type="text" class="form-control" id="user" name="user" value="' + user +'">' +
             '</div>' +
             
             '<div class="form-group">' +
-              '<button type="submit" class="btn btn-primary">Add</button>' +
+              '<button type="submit" class="btn btn-primary">' + btnText + '</button>' +
             '</div>' +
           '</form>' 
         ,
@@ -290,6 +296,68 @@
           alert('We need to edit provision:' + provision.description);
           selectedProvision = provision;
           
+
+          initializeBootboxDialog(provision.provisionDate, 
+                  provisionType=provision.provisionType,
+                  provision.description, provision.provisionAmount, 
+                  provision.user, true);
+      
+          // Handle form submission within the popup (optional)
+          const userForm = document.getElementById("provisionForm");
+          userForm.addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const datepickerElement = document.getElementById('datepicker');  
+            const selectedDate = datepickerElement.value;
+            const parsedDate = new Date(selectedDate);
+            const formattedDate = moment(selectedDate).format('YYYYMMDD')
+            // Access form data here (e.g., using formData or form elements)
+            console.log('Formatted date:', formattedDate);
+            const amountString = document.getElementById("amount").value;
+            const amount = parseFloat(amountString)
+            const desc = document.getElementById("description").value;
+            const user = document.getElementById("user").value;
+            const provtypeString = document.getElementById("provisionType").value; 
+            console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtypeString}`);
+      
+            
+            const myFormDict = {
+              "id": 0,
+              "description": desc,
+              "provisionType": provtypeString,
+              "provisionDate": formattedDate,
+              "provisionAmount": amount,
+              "user": user
+            }
+
+            const postData = JSON.stringify(myFormDict);        
+            const options = {
+              method: 'POST',
+              headers: {"content-type": "application/json"},
+              body: postData
+              };
+              
+              fetch('/updateProvision', options)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                  } else {
+                    window.location.reload();
+                    bootbox.hideAll();
+                  }})
+              .then(data => console.log(data)) // Handle the response
+              .catch(error => console.error('Error:', error));
+            
+        // Perform any actions with the data (e.g., send to server)
+        // ...
+         // Close the popup after processing
+      });
+
+
+
+
+
+
           // Pre-fill a form or modal for editing (not shown here)
         });
 
