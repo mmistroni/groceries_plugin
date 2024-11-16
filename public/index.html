@@ -194,48 +194,48 @@
 
     function initializeBootboxDialog() {
       bootbox.dialog({
-        message: `
-          <form id="provisionForm">
-            <div class="form-group">
-                <label for="date" class="form-label">Date:</label>
-                <div class="input-group date" id="datepicker">
-                  <input type="text" class="form-control" id="provisionDate" required>
-                  <span class="input-group-addon">
-                    <i class="glyphicon glyphicon-calendar"></i>
-                  </span>
-                </div>
-            </div>
-            <div class="form-group">
-              <label for="role">ProvisionType:</label>
-              <select class="form-control" id="provisionType" name="provisionType">
-                <option value="CAR">Car</option>
-                <option value="TV">TV</option>
-                <option value="PHONE">Phone</option>
-                <option value="GAS">Gas</option>
-                <option value="COUNCIL">Council</option>
-                <option value="HOUSE_INSURANCE">House Insurance</option>
-                <option value="LIFE_INSURANCE">Life Insurance</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>  
-            <div class="form-group">
-              <label for="description">Description:</label>
-              <input type="text" class="form-control" id="description" name="description" required>
-            </div>
-            <div class="form-group">
-              <label for="amount">Amount:</label>
-              <input type="text" class="form-control" id="amount" name="amount" required>
-            </div>
-            <div class="form-group">
-              <label for="user">User:</label>
-              <input type="text" class="form-control" id="user" name="user" required>
-            </div>
+        message: 
+          '<form id="provisionForm">' +
+            '<div class="form-group">' +
+                '<label for="date" class="form-label">Date:</label>' +
+                '<div class="input-group date" id="datepicker">' +
+                  '<input type="text" class="form-control" id="provisionDate" required>' +
+                  '<span class="input-group-addon">' +
+                    '<i class="glyphicon glyphicon-calendar"></i>' +
+                  '</span>' +
+                '</div>' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label for="role">ProvisionType:</label>' +
+              '<select class="form-control" id="provisionType" name="provisionType">' +
+                '<option value="CAR">Car</option>' +
+                '<option value="TV">TV</option>' +
+                '<option value="PHONE">Phone</option>' +
+                '<option value="GAS">Gas</option>' +
+                '<option value="COUNCIL">Council</option>' +
+                '<option value="HOUSE_INSURANCE">House Insurance</option>' +
+                '<option value="LIFE_INSURANCE">Life Insurance</option>' +
+                '<option value="OTHER">Other</option>' +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label for="description">Description:</label>' +
+              '<input type="text" class="form-control" id="description" name="description" required>' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label for="amount">Amount:</label>' +
+              '<input type="text" class="form-control" id="amount" name="amount" required>' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label for="user">User:</label>' +
+              '<input type="text" class="form-control" id="user" name="user" required>' +
+            '</div>' +
             
-            <div class="form-group">
-              <button type="submit" class="btn btn-primary">Add</button>
-            </div>
-          </form>
-        `,
+            '<div class="form-group">' +
+              '<button type="submit" class="btn btn-primary">Add</button>' +
+            '</div>' +
+          '</form>' 
+        ,
         buttons: {},
         onEscape:true ,
         centerVertical: true,// No default buttons,
