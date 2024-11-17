@@ -85,7 +85,7 @@ async def post_provision2(request : Request):
     return {"status": "SUCCESS"}
 
 
-@app.post("/updateprovision2")
+@app.post("/updateprovision")
 async def post_provision2(request : Request):
     request_data = await request.json()
     
@@ -94,10 +94,10 @@ async def post_provision2(request : Request):
     provision_type_enum = ProvisionType[provision_type_string]
 
     existing = provision_list.get(provision_id);
-    existing.provisionType=provision_type_enum,
-    existing.provisionAmount=float(request_data['provisionAmount']),
-    existing.description=request_data['description'],
-    existing.provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d'),
+    existing.provisionType=provision_type_enum
+    existing.provisionAmount=float(request_data['provisionAmount'])
+    existing.description=request_data['description']
+    existing.provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d').date()
     existing.user=request_data['user']
     
     
