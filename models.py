@@ -11,11 +11,11 @@ from enum import Enum
 class ProvisionType(Enum):
     CAR = 1
     TV = 2
-    PHONE = 3,
-    GAS = 4,
-    COUNCIL = 5,
-    HOUSE_INSURANCE = 6,
-    LIFE_INSURANCE = 7,
+    PHONE = 3
+    GAS = 4
+    COUNCIL = 5
+    HOUSE_INSURANCE = 6
+    LIFE_INSURANCE = 7
     OTHER = 8
     
     def __str__(self):
@@ -37,6 +37,8 @@ class Provision(BaseModel):
   
   class Config:
     use_enum_values = False
+    orm_model = True
+    from_attributes = True
   
   @computed_field(return_type=str)
   def total_cost(self):
