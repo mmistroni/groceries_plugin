@@ -142,16 +142,16 @@ async def get_provision(
         logging.info(f'Selected option:{option}')
         filtered = [p for p in data if p.provisionType.name == option]
         logging.info(f'Obtained:{len(data)}')
-        return filtered
+        
 
     if  start and end:
         logging.info(f'start type:{type(start)}')
         cob_start = datetime.strptime(start, '%Y-%m-%d').date()
         cob_end = datetime.strptime(end, '%Y-%m-%d').date()
         
-        return [p for p in data if p.provisionDate >= cob_start \
+        filtered =  [p for p in data if p.provisionDate >= cob_start \
                         and p.provisionDate <= cob_end]
-    return data
+    return filtered
 
 def _generate_random_int() -> int:
   """Generates a random integer without a specific range."""
