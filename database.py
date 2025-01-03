@@ -1,7 +1,8 @@
 # sql alchemy, we need a postgre sql db
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Date, Float
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Date, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from models import Provision as PydanticProvision
 
 # Database connection details (replace with your actual credentials)
 # Database Connection String
@@ -18,7 +19,7 @@ class Provision(Base):
   id = Column(Integer, primary_key=True)
   description = Column(String)
   provisionType = Column(Integer)  
-  provisionDate = Column(Date)
+  provisionDate = Column(DateTime)
   provisionAmount = Column(Float, name='amount')
   user = Column(String)
   
@@ -33,10 +34,17 @@ def get_db():
     db.close()
     
     
-def get_provisions(limit : int = None):
+def get_provisions_from_db(limit : int = None):
   results = SessionLocal().query(Provision).order_by(Provision.id.desc())
   if limit:
-    return [p for p in results.limit(limit)]
-  return [p for p in results]
+    provs =   [_sqlalchemy_to_pydantic(p) for p in results.limit(limit)]
+  else:
+    provs = [_sqlalchemy_to_pydantic(p) for p in results ] 
+  return provs
+
+def _sqlalchemy_to_pydantic(sqlalchemy_obj):
+    return PydanticProvision.model_validate(sqlalchemy_obj.__dict__)
+  
+
   
   

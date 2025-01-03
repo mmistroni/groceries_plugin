@@ -6,18 +6,28 @@ from fastapi.staticfiles import StaticFiles
 import logging
 import random
 from typing import List
-from database import get_db, Item
+from database import get_db, get_provisions_from_db
 
 app = FastAPI()
 
 
+
+'''
 provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=ProvisionType.CAR, provisionAmount=10.0, description="Eggs", 
-                                                       provisionDate=date(2024,8,2), user="XXXXX"),
+                                                       provisionDate=datetime(2024,8,2, 0, 0, 0), user="XXXXX"),
                                          2 : Provision(id=2, provisionType=ProvisionType.COUNCIL, provisionAmount=100.0, description="Council", 
-                                                       provisionDate=date(2024,9,2), user="XXXXX"),
+                                                       provisionDate=datetime(2024,9,2 , 0, 0, 0), user="XXXXX"),
                                          3 : Provision(id=3, provisionType=ProvisionType.LIFE_INSURANCE, provisionAmount=1000.0, description="Car", 
-                                                       provisionDate=date(2024,9,20), user="XXXXX")
+                                                       provisionDate=datetime(2024,9,20,  0, 0, 0), user="XXXXX")
                                          }
+'''
+async def get_provisions():
+    # Load the list of items from database.py (replace with your actual loading logic)
+    provs = get_provisions_from_db(limit=20)
+    provision_list =  dict((prov.id, prov) for prov in provs)
+    return provs
+
+
 grocery_list: dict[int, ItemPayload] = {}
 templates = Jinja2Templates(directory="public/")
 
@@ -105,10 +115,6 @@ async def post_provision2(request : Request):
     return {"status": "SUCCESS"}
 
 
-
-
-
-
 @app.post("/deleteprovision/")
 async def deleteProvision(request : Request):
     
@@ -120,17 +126,15 @@ async def deleteProvision(request : Request):
     
     return {"status": "SUCCESS"}
 
-
-
 @app.get("/api/provisions")
 async def get_provision(
     option: str = Query(None),
     start: str = Query(None),
     end: str = Query(None)
-    ) -> List[Provision]:
+    ) -> List[Provision] :
     
     # we should use this method and fetch provision
-    data =  [p for p in provision_list.values()]
+    data =  await get_provisions() #[p for p in provision_list.values()]
     
     if option:
         # Filter provisions based on the option
