@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 import logging
 import random
 from typing import List
-from database import get_db, get_provisions_from_db
+from database import get_db, get_provisions_from_db, insert_provision
 
 app = FastAPI()
 
@@ -84,14 +84,14 @@ async def post_provision2(request : Request):
 
     
     new_provision = Provision(
-        id=provision_id,
         provisionType=provision_type_enum,
         provisionAmount=request_data['provisionAmount'],
         description=request_data['description'],
         provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d'),
         user=request_data['user']
     )
-    provision_list[provision_id] = new_provision
+    insert_provision(new_provision)
+    #provision_list[provision_id] = new_provision
     # we should use this method and fetch provision
     return {"status": "SUCCESS"}
 
@@ -140,7 +140,7 @@ async def get_provision(
         # Filter provisions based on the option
         # ...
         logging.info(f'Selected option:{option}')
-        filtered = [p for p in data if p.provisionType.name == option]
+        data = [p for p in data if p.provisionType.name == option]
         logging.info(f'Obtained:{len(data)}')
         
 

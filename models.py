@@ -33,8 +33,9 @@ class ProvisionType(Enum):
 def get_provision_type_name(provision_type: ProvisionType) -> str:
     return provision_type.name
 
+
 class Provision(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = = Field(default=None) 
     description: str
     provisionType:ProvisionType  
     provisionDate:datetime
