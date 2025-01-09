@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, Date, Fl
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from models import Provision as PydanticProvision
-
+from models import ProvisionType 
 # Database connection details (replace with your actual credentials)
 # Database Connection String
 DATABASE_URL = "mysql+pymysql://root:admin@localhost:3306/zkbudget" 
@@ -37,16 +37,49 @@ def get_db():
     db.close()
     
 
-def insert_provision(pydanticProv : PydanticProvision) -> int :
+def insert_provision(pydanticProv : PydanticProvision) -> PydanticProvision :
   logging.info('Inserting provision')
-  sqlProvision = populate_sqlalchemy_from_pydantic(pydanticProv, Provision)
-  
-  db = get_db()
+  sqlProvision = populate_sqlalchemy_from_pydantic( Provision, pydanticProv)
+  db = SessionLocal()
   db.add(sqlProvision)
   db.commit()
   db.refresh(sqlProvision)
   return _sqlalchemy_to_pydantic(sqlProvision)
 
+
+def update_provision(pydanticProv : PydanticProvision) -> PydanticProvision :
+  logging.info('Updatingg provision')
+  session = SessionLocal()
+  provision_id = pydanticProv.id
+  provision = session.query(Provision).filter(Provision.id == provision_id).first()
+  if provision:
+      provision = populate_sqlalchemy_from_pydantic(provision, pydanticProv)
+      session.commit()
+      print(f"Provision with ID {provision_id} updated successfully.")
+  else:
+      print(f"Provision with ID {provision_id} not found.")
+  return _sqlalchemy_to_pydantic(provision)
+
+def delete_provision(pydanticProv : PydanticProvision) -> None :
+  """
+    Deletes a Provision record from the database by its ID.
+
+    Args:
+        provision_id: The ID of the Provision to delete.
+    """
+    
+  logging.info('Updatingg provision')
+  session = SessionLocal()
+  provision_id = pydanticProv.id
+  provision = session.query(Provision).filter(Provision.id == provision_id).first()
+  if provision:
+      session.delete(provision)
+      session.commit()
+      print(f"Provision with ID {provision_id} deleted successfully.")
+  else:
+      print(f"Provision with ID {provision_id} not found.")
+
+  
     
 def get_provisions_from_db(limit : int = None):
   results = SessionLocal().query(Provision).order_by(Provision.id.desc())
@@ -76,7 +109,10 @@ def populate_sqlalchemy_from_pydantic(sqlalchemy_model, pydantic_model):
     sqlalchemy_instance = sqlalchemy_model() 
     for key, value in pydantic_model.dict().items():
         if hasattr(sqlalchemy_instance, key):
-            setattr(sqlalchemy_instance, key, value)
+            if isinstance(value, ProvisionType): 
+                setattr(sqlalchemy_instance, key, value.value) 
+            else:
+                setattr(sqlalchemy_instance, key, value)
     return sqlalchemy_instance
   
 

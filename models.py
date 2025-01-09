@@ -35,7 +35,7 @@ def get_provision_type_name(provision_type: ProvisionType) -> str:
 
 
 class Provision(BaseModel):
-    id: Optional[int] = = Field(default=None) 
+    id: Optional[int] = Field(default=None) 
     description: str
     provisionType:ProvisionType  
     provisionDate:datetime
