@@ -60,7 +60,7 @@ def update_provision(pydanticProv : PydanticProvision) -> PydanticProvision :
       print(f"Provision with ID {provision_id} not found.")
   return _sqlalchemy_to_pydantic(provision)
 
-def delete_provision(pydanticProv : PydanticProvision) -> None :
+def delete_provision(provision_id: int) -> None :
   """
     Deletes a Provision record from the database by its ID.
 
@@ -70,7 +70,6 @@ def delete_provision(pydanticProv : PydanticProvision) -> None :
     
   logging.info('Updatingg provision')
   session = SessionLocal()
-  provision_id = pydanticProv.id
   provision = session.query(Provision).filter(Provision.id == provision_id).first()
   if provision:
       session.delete(provision)

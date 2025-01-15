@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 import logging
 import random
 from typing import List
-from database import get_db, get_provisions_from_db, insert_provision
+from database import get_db, get_provisions_from_db, insert_provision, delete_provision
 
 app = FastAPI()
 
@@ -122,7 +122,8 @@ async def deleteProvision(request : Request):
     provision_id = int(request_data.get("id"))
     logging.info(f'We should delete provision with id:{provision_id}')
     
-    provision_list.pop(provision_id);
+    delete_provision(provision_id)
+    
     
     return {"status": "SUCCESS"}
 
