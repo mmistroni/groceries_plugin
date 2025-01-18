@@ -273,11 +273,28 @@
       $('#provision-table').DataTable({
         "data": data, 
         "columns": [
-          { "data": "provisionDate" },
+          { "data": "provisionDate"},
           { "data": "description" },
-          { "data": "provisionType" },
+          { "data": "total_cost" },
           { "data": "provisionAmount" },
           { "data": "user" }
+        ],
+        "columnDefs": [
+          {
+            "targets": 0, // Assuming 'name' is in the first column (index 0)
+            "render": function ( data, type, row ) {
+              return '<a href="#" onclick="openPopup(\'' + row.provisionDate + '\', ' + row.total_cost + 
+                                                    '\', ' + row.description + '\', ' + row.provisionAmount +
+                                                     '\', ' + row.user + '\', ' + row.id +
+                                                    ')">' + row.provisionDate + '</a>'; // Replace 'row.id' with the actual ID property
+            
+              //initializeBootboxDialog(provision.provisionDate, 
+              //provisionType=provision.provisionType,
+              //provision.description, provision.provisionAmount, 
+              //provision.user, provision.id, true);
+            
+            }
+          }
         ]
       });
     }
