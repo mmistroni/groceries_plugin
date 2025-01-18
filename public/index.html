@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/public/css/fontawesomeall.min.css">
   <link rel="stylesheet" href="/public/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  
   <link rel="stylesheet"  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link href= 
 "https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" 
@@ -18,21 +20,11 @@
   <script src="/public/js/bootbox.min.js"></script>
   <script src="/public/js/bootstrap.datepicker.min.js"></script>
   <script src="/public/js/moment.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+  <script src="/public/js/jquery.dataTables.min.js"></script> 
   
   <title>Provision Management</title>
   <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 5px;
-      border: 1px solid #ddd;
-    }
-    #provision-table tbody {
-      height: 400px;
-      overflow-y: scroll;
-    }
     .modal-header .close {
       display: none; /* Hide the close button */
     }
@@ -85,7 +77,7 @@
     
   </div>
 
-  <table id="provision-table">
+  <table id="provision-table" class="display">
     <thead>
       <tr>
         <th>Provision Date</th>
@@ -93,10 +85,11 @@
         <th>Provision Type</th>
         <th>Amount</th>
         <th>User</th>
-        <th>Actions</th>
+        
       </tr>
     </thead>
-    <tbody id="provision-body"></tbody>
+    <tbody>
+    </tbody>
   </table>
   <br>
   
@@ -117,13 +110,16 @@
     const endDateField = document.getElementById('endDate');
 
     selectField.addEventListener('change', () => {
+      $('#provision-table').DataTable().destroy(); 
       reloadPage();
     });
     
     startDateField.addEventListener('change', () => {
+      $('#provision-table').DataTable().destroy(); 
       reloadPage();
     });
     endDateField.addEventListener('change', () => {
+      $('#provision-table').DataTable().destroy(); 
       reloadPage();
     });
 
@@ -272,16 +268,28 @@
   }
 
 
+    function  updateTable(data) {
+      console.info(data)
+      $('#provision-table').DataTable({
+        "data": data, 
+        "columns": [
+          { "data": "provisionDate" },
+          { "data": "description" },
+          { "data": "provisionType" },
+          { "data": "provisionAmount" },
+          { "data": "user" }
+        ]
+      });
+    }
+      
+      
 
-
-    function updateTable(provisions) {
+    function xupdateTable(provisions) {
       provisionTable.innerHTML = ""; // Clear existing rows
       let total = 0;
       for (const provision of provisions) {
-        console.log(provision);
         const tableRow = document.createElement('tr');
         // need to convert enum integer to a string
-        console.log('--provision:' + provision.name)
         const dateCell = document.createElement('td');
         dateCell.textContent = provision.provisionDate;
         tableRow.appendChild(dateCell);
@@ -305,6 +313,9 @@
         userCell.textContent = provision.user;
         tableRow.appendChild(userCell);
 
+        
+        
+        
         const actionCell = document.createElement('td');
         const editBtn = document.createElement('button');
         editBtn.innerHTML = '<i class="fa-solid fa-edit"></i>';
@@ -432,6 +443,9 @@
         // Handle errors appropriately (e.g., display an error message to the user)
       }
     };
+
+    
+
 
 
 
