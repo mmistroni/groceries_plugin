@@ -23,7 +23,7 @@ provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=Provi
 '''
 async def get_provisions():
     # Load the list of items from database.py (replace with your actual loading logic)
-    provs = get_provisions_from_db(limit=20)
+    provs = get_provisions_from_db(limit=40)
     provision_list =  dict((prov.id, prov) for prov in provs)
     return provs
 
@@ -43,7 +43,7 @@ def root(request:Request):
 @app.get("/tester")
 def tester(request:Request):
     result = "Type a number"
-    return templates.TemplateResponse('sample_bs.html', context={'request' : request, 'result': result})
+    return templates.TemplateResponse('dtsample.html', context={'request' : request, 'result': result})
 
 
 @app.post("/items/{item_name}/{quantity}")

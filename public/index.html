@@ -54,29 +54,36 @@
 </head>
 <body>
   <h1>Provision Management</h1>
-  <p><b>Total Amount:</b> <span id="total-amount">0</span><i class="fa-brands fa-twitter"></i></p>
 
-  <label for="optionList">Select a Value:</label>
-  <select id="optionList">
-    <option value=""></option>
-    <option value="HOUSE_INSURANCE">HOUSE_INSURANCE</option>
-    <option value="PHONE">Phone</option>
-    <option value="BALANCE">Balance</option>
-    <option value="WATER">Water</option>
-    <option value="GAS">Gas</option>
-    <option value="CAR">Car</option>
-    <option value="COUNCIL">Council</option>
-    <option value="TV">TV</option>
-    <option value="LIFE_INSURANCE">Life Insurance</option>
-    <option value="OTHER">Other</option>
-  </select>
+  <div id="row">
+    <p><b>Total Amount:</b> <span id="total-amount">0</span><i class="fa-brands fa-twitter"></i></p>
+  </div>
 
-  <label for="startDate">Start Date:</label>
-  <input type="date" id="startDate" value="2020-01-01">
+  <div id="row">
+    <label for="optionList">Select a Value:</label>
+    <select id="optionList">
+      <option value=""></option>
+      <option value="HOUSE_INSURANCE">HOUSE_INSURANCE</option>
+      <option value="PHONE">Phone</option>
+      <option value="BALANCE">Balance</option>
+      <option value="WATER">Water</option>
+      <option value="GAS">Gas</option>
+      <option value="CAR">Car</option>
+      <option value="COUNCIL">Council</option>
+      <option value="TV">TV</option>
+      <option value="LIFE_INSURANCE">Life Insurance</option>
+      <option value="OTHER">Other</option>
+    </select>
 
-  <label for="endDate">End Date:</label>
-  <input type="date"  id="endDate" value="9999-12-31">
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" value="2020-01-01">
 
+    <label for="endDate">End Date:</label>
+    <input type="date"  id="endDate" value="9999-12-31">
+
+    <button id="create-btn" type="button" class="btn btn-primary">Create</button>
+    
+  </div>
 
   <table id="provision-table">
     <thead>
@@ -92,7 +99,6 @@
     <tbody id="provision-body"></tbody>
   </table>
   <br>
-  <button id="create-btn">Create</button>
   
   <script>
 
