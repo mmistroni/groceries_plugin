@@ -202,7 +202,6 @@
     });
 
     function openPopUp(provisionDate, provisionType, description, amount, user, id) {
-      alert(provisionDate + ',' + provisionType + "," + description);
       initializeBootboxDialog(provisionDate, provisionType,
                               description, amount,
                               user, id, true);
@@ -230,7 +229,7 @@
             '</div>' +
             '<div class="form-group">' +
               '<label for="role">ProvisionType:</label>' +
-              '<select class="form-control" id="modalProvisionType" name="provisionType" >'  +
+              '<select class="form-control" id="provisionType" name="provisionType" >'  +
                 '<option value="CAR">Car</option>' +
                 '<option value="TV">TV</option>' +
                 '<option value="PHONE">Phone</option>' +
@@ -265,13 +264,15 @@
         class : 'modal-lg draggable'
       }).init(function () {
         // Set the initial value of the select list here
-        $('#modalProvisionType').val(inProvisionType); // Set the initial value to "option2"
+        $('#provisionType').val(inProvisionType); // Set the initial value to "option2"
       })
       .on('shown.bs.modal', function() {
         // Initialize datepicker after modal is shown
+        /*
         $('#datepicker').datepicker({
           autoclose:true
         });
+        */
       });
   }
 

@@ -6,21 +6,10 @@ from fastapi.staticfiles import StaticFiles
 import logging
 import random
 from typing import List
-from database import get_db, get_provisions_from_db, insert_provision, delete_provision
+from database import get_db, get_provisions_from_db, insert_provision, delete_provision, update_provision
 
 app = FastAPI()
 
-
-
-'''
-provision_list: dict[int, Provision] = { 1 : Provision(id=1, provisionType=ProvisionType.CAR, provisionAmount=10.0, description="Eggs", 
-                                                       provisionDate=datetime(2024,8,2, 0, 0, 0), user="XXXXX"),
-                                         2 : Provision(id=2, provisionType=ProvisionType.COUNCIL, provisionAmount=100.0, description="Council", 
-                                                       provisionDate=datetime(2024,9,2 , 0, 0, 0), user="XXXXX"),
-                                         3 : Provision(id=3, provisionType=ProvisionType.LIFE_INSURANCE, provisionAmount=1000.0, description="Car", 
-                                                       provisionDate=datetime(2024,9,20,  0, 0, 0), user="XXXXX")
-                                         }
-'''
 async def get_provisions():
     # Load the list of items from database.py (replace with your actual loading logic)
     provs = get_provisions_from_db(limit=40)
@@ -44,28 +33,6 @@ def root(request:Request):
 def tester(request:Request):
     result = "Type a number"
     return templates.TemplateResponse('dtsample.html', context={'request' : request, 'result': result})
-
-
-@app.post("/items/{item_name}/{quantity}")
-def add_item(item_name: str, quantity: int):
-    if quantity <= 0:
-        raise HTTPException(status_code=400, detail="Quantity must be greater than 0.")
-    # if item already exists, we'll just add the quantity.
-    # get all item names
-    items_ids = {item.item_name: item.item_id if item.item_id is not None else 0 for item in grocery_list.values()}
-    if item_name in items_ids.keys():
-        # get index of item_name in item_ids, which is the item_id
-        item_id = items_ids[item_name]
-        grocery_list[item_id].quantity += quantity
-# otherwise, create a new item
-    else:
-        # generate an ID for the item based on the highest ID in the grocery_list
-        item_id = max(grocery_list.keys()) + 1 if grocery_list else 0
-        grocery_list[item_id] = ItemPayload(
-            item_id=item_id, item_name=item_name, quantity=quantity
-        )
-
-    return {"item": grocery_list[item_id]}
 
 @app.post("/provision/{provisionType}/{amount}/{description}/{provisionDate}/{user}")
 def add_provision(provisionType: int, provisionAmount:float, description: str, provisionDate : str,
@@ -104,12 +71,14 @@ async def post_provision2(request : Request):
     provision_type_string = request_data.get("provisionType")
     provision_type_enum = ProvisionType[provision_type_string]
 
-    existing = provision_list.get(provision_id);
+    existing = Provision();
+    existing.id = provision_id
     existing.provisionType=provision_type_enum
     existing.provisionAmount=float(request_data['provisionAmount'])
     existing.description=request_data['description']
-    existing.provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d').date()
+    existing.provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d')
     existing.user=request_data['user']
+    update_provision(existing);
     
     
     return {"status": "SUCCESS"}
