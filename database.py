@@ -81,7 +81,7 @@ def delete_provision(provision_id: int) -> None :
   
     
 def get_provisions_from_db(limit : int = None):
-  results = SessionLocal().query(Provision).order_by(Provision.id.desc())
+  results = SessionLocal().query(Provision).order_by(Provision.provisionDate.desc())
   if limit:
     provs =   [_sqlalchemy_to_pydantic(p) for p in results.limit(limit)]
   else:

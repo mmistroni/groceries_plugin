@@ -34,12 +34,6 @@ def tester(request:Request):
     result = "Type a number"
     return templates.TemplateResponse('dtsample.html', context={'request' : request, 'result': result})
 
-@app.post("/provision/{provisionType}/{amount}/{description}/{provisionDate}/{user}")
-def add_provision(provisionType: int, provisionAmount:float, description: str, provisionDate : str,
-                  user : str):
-    provision_id = _generate_random_int()
-    
-    return {"status": "SUCCESS"}
 
 @app.post("/addprovision2")
 async def post_provision2(request : Request):

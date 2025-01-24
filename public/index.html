@@ -124,6 +124,13 @@
     });
 
     
+    function getCurrentDateString() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}` 
+    }
   
     const provisionTable = document.getElementById('provision-body');
     const createBtn = document.getElementById('create-btn');
@@ -145,59 +152,62 @@
       return data;
     }
 
+    function submitData(endpoint) {
+      alert('Submittinig to ' + endpoint)
+      const datepickerElement = document.getElementById('datepicker');  
+      const selectedDate = datepickerElement.value;
+      const parsedDate = new Date(selectedDate);
+      const formattedDate = moment(selectedDate).format('YYYYMMDD')
+      // Access form data here (e.g., using formData or form elements)
+      console.log('Formatted date:', formattedDate);
+      const amountString = document.getElementById("amount").value;
+      const amount = parseFloat(amountString)
+      const desc = document.getElementById("description").value;
+      const user = document.getElementById("user").value;
+      const provtypeString = document.getElementById("provisionType").value; 
+      console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtypeString}`);
+      alert(desc);
+      
+      const myFormDict = {
+        "id": 0,
+        "description": desc,
+        "provisionType": provtypeString,
+        "provisionDate": formattedDate,
+        "provisionAmount": amount,
+        "user": user
+      }
+
+      const postData = JSON.stringify(myFormDict);        
+      const options = {
+        method: 'POST',
+        headers: {"content-type": "application/json"},
+        body: postData
+        };
+        
+        fetch(endpoint, options)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+            } else {
+              window.location.reload();
+              bootbox.hideAll();
+            }})
+        .then(data => console.log(data)) // Handle the response
+        .catch(error => console.error('Error:', error));
+    }
+
+
     createBtn.addEventListener("click", function() {
       alert('Creating');
-      initializeBootboxDialog('', '', '', '', '');
+
+      initializeBootboxDialog(getCurrentDateString(), '', '', '', '');
       
       // Handle form submission within the popup (optional)
       const userForm = document.getElementById("provisionForm");
       userForm.addEventListener("submit", function(event) {
         event.preventDefault(); // Prevent default form submission
-
-        const datepickerElement = document.getElementById('datepicker');  
-        const selectedDate = datepickerElement.value;
-        const parsedDate = new Date(selectedDate);
-        const formattedDate = moment(selectedDate).format('YYYYMMDD')
-        // Access form data here (e.g., using formData or form elements)
-        console.log('Formatted date:', formattedDate);
-        const amountString = document.getElementById("amount").value;
-        const amount = parseFloat(amountString)
-        const desc = document.getElementById("description").value;
-        const user = document.getElementById("user").value;
-        const provtypeString = document.getElementById("provisionType").value; 
-        console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtypeString}`);
-  
+        submitData('/addprovision2');  
         
-        const myFormDict = {
-          "id": 0,
-          "description": desc,
-          "provisionType": provtypeString,
-          "provisionDate": formattedDate,
-          "provisionAmount": amount,
-          "user": user
-        }
-
-        const postData = JSON.stringify(myFormDict);        
-        const options = {
-          method: 'POST',
-          headers: {"content-type": "application/json"},
-          body: postData
-          };
-          
-          fetch('/addprovision2', options)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-              } else {
-                window.location.reload();
-                bootbox.hideAll();
-              }})
-          .then(data => console.log(data)) // Handle the response
-          .catch(error => console.error('Error:', error));
-        
-        // Perform any actions with the data (e.g., send to server)
-        // ...
-         // Close the popup after processing
       });
     });
 
@@ -211,8 +221,32 @@
     function initializeBootboxDialog(provisionDate = '', inProvisionType='',
                       description = '', amount = '0', user='', provisionId=-1,update=false) {
       var btnText = 'Add';
+      dialog_buttons = {}
       if (update) {
-        btnText = 'Update'
+        dialog_buttons.button1 = {
+          label: "Update",
+          className: "btn-primary",
+          callback: function() {
+            alert('Update clicked');
+            submitData('/updateprovision');
+      
+          }
+        };
+    
+        dialog_buttons.button2 = {
+          label: "Delete",
+          className: "btn-success",
+          callback: function() {
+            // Handle button 2 click
+          }
+        };
+      } else {
+        dialog_buttons.button1 = {
+          label: "Add2",
+          className: "btn-primary"
+          
+        }; 
+
       }                  
       bootbox.dialog({
         message: 
@@ -258,7 +292,7 @@
             '</div>' +
           '</form>' 
         ,
-        buttons: {},
+        buttons: dialog_buttons,
         onEscape:true ,
         centerVertical: true,// No default buttons,
         class : 'modal-lg draggable'
