@@ -152,8 +152,35 @@
       return data;
     }
 
+    function deleteData() {
+      const provisionId = document.getElementById('id').value;  
+      const myFormDict = {
+        "id": provisionId
+      }   
+      const postData = JSON.stringify(myFormDict);     
+      const options = {
+        method: 'POST',
+        headers: {"content-type": "application/json"},
+        body: postData
+        };
+
+
+      fetch('/deleteprovision/', options)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+          } else {
+            window.location.reload();
+            bootbox.hideAll();
+          }})
+      .then(data => console.log(data)) // Handle the response
+      .catch(error => console.error('Error:', error));
+      
+      // Pre-fill a form or modal for editing (not shown here)
+    }
+
+
     function submitData(endpoint) {
-      alert('Submittinig to ' + endpoint)
       const datepickerElement = document.getElementById('datepicker');  
       const selectedDate = datepickerElement.value;
       const parsedDate = new Date(selectedDate);
@@ -166,8 +193,6 @@
       const user = document.getElementById("user").value;
       const provtypeString = document.getElementById("provisionType").value; 
       console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtypeString}`);
-      alert(desc);
-      
       const myFormDict = {
         "id": 0,
         "description": desc,
@@ -198,8 +223,6 @@
 
 
     createBtn.addEventListener("click", function() {
-      alert('Creating');
-
       initializeBootboxDialog(getCurrentDateString(), '', '', '', '');
       
       // Handle form submission within the popup (optional)
@@ -227,7 +250,6 @@
           label: "Update",
           className: "btn-primary",
           callback: function() {
-            alert('Update clicked');
             submitData('/updateprovision');
       
           }
@@ -237,6 +259,7 @@
           label: "Delete",
           className: "btn-success",
           callback: function() {
+            deleteData('/updateprovision');
             // Handle button 2 click
           }
         };
@@ -314,6 +337,7 @@
     function  updateTable(data) {
       console.info(data)
       $('#provision-table').DataTable({
+        "order": [[ 0, 'desc' ]],
         "data": data, 
         "columns": [
           { "data": "provisionDate"},
@@ -341,155 +365,44 @@
             
             }
           }
-        ]
+        ],
+        "footerCallback": function ( row, data, start, end, display ) {
+            var api = this.api(), data;
+ 
+            // Remove the existing content of the footer
+            $( api.column( 3 ).footer() ).empty();
+            console.log('footer callback');
+            console.log('first col:' + api.column(1).data());
+            // Total over all pages
+            total = api
+                .column( 3 )
+                .data()
+                .reduce( function (a, b) {
+                    return Number(a) + Number(b);
+                }, 0 );
+ 
+            // Total over this page
+            pageTotal = api
+                .column( 3, { page: 'current'} )
+                .data()
+                .reduce( function (a, b) {
+                    return Number(a) + Number(b);
+                }, 0 );
+            console.log('pagetotal ' + pageTotal);
+            const totalAmountSpan = document.getElementById('total-amount');
+
+            // Add the text "100" to the span element
+            totalAmountSpan.textContent = total;    
+            
+            // Update footer
+            $( api.column( 3 ).footer() ).html(
+                'Total: ' + pageTotal + ' (page total)<br>' +
+                'Total: ' + total + ' (all pages)'
+            );
+        }
       });
     }
-      
-      
-
-    function xupdateTable(provisions) {
-      provisionTable.innerHTML = ""; // Clear existing rows
-      let total = 0;
-      for (const provision of provisions) {
-        const tableRow = document.createElement('tr');
-        // need to convert enum integer to a string
-        const dateCell = document.createElement('td');
-        dateCell.textContent = provision.provisionDate;
-        tableRow.appendChild(dateCell);
-
-        const descriptionCell = document.createElement('td');
-        descriptionCell.textContent = provision.description;
-        tableRow.appendChild(descriptionCell);
-
-        
-        const provisionTypeCell = document.createElement('td');
-        provisionTypeCell.textContent = provision.total_cost;
-        tableRow.appendChild(provisionTypeCell);
-        
-        
-        const amountCell = document.createElement('td');
-        amountCell.textContent = provision.provisionAmount;
-        tableRow.appendChild(amountCell);
-        total += provision.provisionAmount;
-
-        const userCell = document.createElement('td');
-        userCell.textContent = provision.user;
-        tableRow.appendChild(userCell);
-
-        
-        
-        
-        const actionCell = document.createElement('td');
-        const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<i class="fa-solid fa-edit"></i>';
-        //editBtn.textContent = "Edit";
-        editBtn.addEventListener('click', () => {
-          alert('We need to edit provision:' + provision.description);
-          selectedProvision = provision;
-          
-
-          initializeBootboxDialog(provision.provisionDate, 
-                  provisionType=provision.provisionType,
-                  provision.description, provision.provisionAmount, 
-                  provision.user, provision.id, true);
-      
-          // Handle form submission within the popup (optional)
-          const userForm = document.getElementById("provisionForm");
-          userForm.addEventListener("submit", function(event) {
-            event.preventDefault(); // Prevent default form submission
-
-            const datepickerElement = document.getElementById('datepicker');  
-            const selectedDate = datepickerElement.value;
-            const parsedDate = new Date(selectedDate);
-            const formattedDate = moment(selectedDate).format('YYYYMMDD')
-            // Access form data here (e.g., using formData or form elements)
-            console.log('Formatted date:', formattedDate);
-            const amountString = document.getElementById("amount").value;
-            const amount = parseFloat(amountString)
-            const desc = document.getElementById("description").value;
-            const user = document.getElementById("user").value;
-            const provtypeString = document.getElementById("provisionType").value; 
-            console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtypeString}`);
-      
-            
-            const myFormDict = {
-              "id": provision.id,
-              "description": desc,
-              "provisionType": provtypeString,
-              "provisionDate": formattedDate,
-              "provisionAmount": amount,
-              "user": user
-            }
-
-            const postData = JSON.stringify(myFormDict);        
-            const options = {
-              method: 'POST',
-              headers: {"content-type": "application/json"},
-              body: postData
-              };
-              
-              fetch('/updateprovision', options)
-              .then(response => {
-                if (!response.ok) {
-                  throw new Error('Network response was not ok');
-                  } else {
-                    window.location.reload();
-                    bootbox.hideAll();
-                  }})
-              .then(data => console.log(data)) // Handle the response
-              .catch(error => console.error('Error:', error));
-            
-        // Perform any actions with the data (e.g., send to server)
-        // ...
-         // Close the popup after processing
-      });
-
-          // Pre-fill a form or modal for editing (not shown here)
-        });
-
-        actionCell.appendChild(editBtn);
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-        deleteBtn.addEventListener('click', () => {
-          alert('We need to delete provision with id:' + provision.id);
-          selectedProvision = provision;
-
-          const myFormDict = {
-            "id": selectedProvision.id
-          }   
-          const postData = JSON.stringify(myFormDict);     
-          const options = {
-            method: 'POST',
-            headers: {"content-type": "application/json"},
-            body: postData
-            };
-
-
-          fetch('/deleteprovision/', options)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-              } else {
-                window.location.reload();
-                bootbox.hideAll();
-              }})
-          .then(data => console.log(data)) // Handle the response
-          .catch(error => console.error('Error:', error));
-          
-          // Pre-fill a form or modal for editing (not shown here)
-        });
-
-
-        actionCell.appendChild(deleteBtn);
-
-
-        tableRow.appendChild(actionCell);
-
-        provisionTable.appendChild(tableRow);
-      }
-      totalAmountSpan.textContent = total; // Update total amount
-    }
+    
 
     async function reloadPage() {
       try {

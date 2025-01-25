@@ -65,13 +65,15 @@ async def post_provision2(request : Request):
     provision_type_string = request_data.get("provisionType")
     provision_type_enum = ProvisionType[provision_type_string]
 
-    existing = Provision();
-    existing.id = provision_id
-    existing.provisionType=provision_type_enum
-    existing.provisionAmount=float(request_data['provisionAmount'])
-    existing.description=request_data['description']
-    existing.provisionDate=datetime.strptime(request_data['provisionDate'], '%Y%m%d')
-    existing.user=request_data['user']
+
+    data = {'provisionAmount' : float(request_data['provisionAmount']),
+            'description' : request_data['description'],
+            'user'  : request_data['user'],
+            'provisionType' : provision_type_enum,
+            'id' : provision_id,
+            'provisionDate' : datetime.strptime(request_data['provisionDate'], '%Y%m%d')}
+
+    existing = Provision(**data);
     update_provision(existing);
     
     

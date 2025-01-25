@@ -53,7 +53,7 @@ def update_provision(pydanticProv : PydanticProvision) -> PydanticProvision :
   provision_id = pydanticProv.id
   provision = session.query(Provision).filter(Provision.id == provision_id).first()
   if provision:
-      provision = populate_sqlalchemy_from_pydantic(provision, pydanticProv)
+      provision = populate_sqlalchemy_from_pydantic(pydanticProv, provision)
       session.commit()
       print(f"Provision with ID {provision_id} updated successfully.")
   else:
