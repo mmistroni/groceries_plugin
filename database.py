@@ -53,7 +53,7 @@ def update_provision(pydanticProv : PydanticProvision) -> PydanticProvision :
   provision_id = pydanticProv.id
   provision = session.query(Provision).filter(Provision.id == provision_id).first()
   if provision:
-      provision = populate_sqlalchemy_from_pydantic(pydanticProv, provision)
+      provision = populate_sqlalchemy_from_pydantic(provision, pydanticProv, update=True)
       session.commit()
       print(f"Provision with ID {provision_id} updated successfully.")
   else:
@@ -92,7 +92,7 @@ def _sqlalchemy_to_pydantic(sqlalchemy_obj):
     return PydanticProvision.model_validate(sqlalchemy_obj.__dict__)
   
   
-def populate_sqlalchemy_from_pydantic(sqlalchemy_model, pydantic_model):
+def populate_sqlalchemy_from_pydantic(sqlalchemy_model, pydantic_model, update=False):
     """
     Populates an SQLAlchemy model instance with data from a Pydantic model.
 
@@ -105,7 +105,7 @@ def populate_sqlalchemy_from_pydantic(sqlalchemy_model, pydantic_model):
         An instance of the SQLAlchemy model populated with data from the Pydantic model.
     """
 
-    sqlalchemy_instance = sqlalchemy_model() 
+    sqlalchemy_instance = sqlalchemy_model()  if not update else sqlalchemy_model
     for key, value in pydantic_model.dict().items():
         if hasattr(sqlalchemy_instance, key):
             if isinstance(value, ProvisionType): 

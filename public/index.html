@@ -189,12 +189,13 @@
       console.log('Formatted date:', formattedDate);
       const amountString = document.getElementById("amount").value;
       const amount = parseFloat(amountString)
+      const id = document.getElementById("id").value;
       const desc = document.getElementById("description").value;
       const user = document.getElementById("user").value;
       const provtypeString = document.getElementById("provisionType").value; 
       console.log(`Cob: ${formattedDate}, amount: ${amount}, desc: ${desc}, 'User:${user}, 'Type:${provtypeString}`);
       const myFormDict = {
-        "id": 0,
+        "id": id,
         "description": desc,
         "provisionType": provtypeString,
         "provisionDate": formattedDate,
@@ -259,7 +260,7 @@
           label: "Delete",
           className: "btn-success",
           callback: function() {
-            deleteData('/updateprovision');
+            deleteData('/deleteprovision');
             // Handle button 2 click
           }
         };
