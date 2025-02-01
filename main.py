@@ -17,7 +17,6 @@ async def get_provisions():
     return provs
 
 
-grocery_list: dict[int, ItemPayload] = {}
 templates = Jinja2Templates(directory="public/")
 
 app.mount("/public", StaticFiles(directory="public"), name="static")
