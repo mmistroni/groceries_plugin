@@ -9,7 +9,7 @@ from models import Provision as PydanticProvision
 from models import ProvisionType 
 # Database connection details (replace with your actual credentials)
 # Database Connection String
-DATABASE_URL = "mysql+pymysql://t" 
+DATABASE_URL = "mysql+pymysql://t" # get it from env
 
 
 engine = create_engine(DATABASE_URL)
