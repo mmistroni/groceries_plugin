@@ -4,3 +4,4 @@ types-redis
 uvicorn
 sqlalchemy
 pymysql
+jinja2

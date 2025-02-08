@@ -9,7 +9,7 @@ from models import Provision as PydanticProvision
 from models import ProvisionType 
 # Database connection details (replace with your actual credentials)
 # Database Connection String
-DATABASE_URL = "mysql+pymysql://root:admin@localhost:3306/zkbudget" 
+DATABASE_URL = "mysql+pymysql://a1dbroot:a1dbroot@a1ecommerce.c9tbu4yt6l9f.us-west-2.rds.amazonaws.com:3306/zkbudget" 
 
 
 engine = create_engine(DATABASE_URL)
@@ -18,7 +18,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 class Provision(Base):
-  __tablename__ = 'provision'
+  __tablename__ = 'PROVISION'
   id = Column(Integer, primary_key=True, autoincrement=True)
   description = Column(String)
   provisionType = Column(Integer)  
