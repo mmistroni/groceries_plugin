@@ -12,7 +12,7 @@ app = FastAPI()
 
 async def get_provisions():
     # Load the list of items from database.py (replace with your actual loading logic)
-    provs = get_provisions_from_db(limit=40)
+    provs = get_provisions_from_db()
     provision_list =  dict((prov.id, prov) for prov in provs)
     return provs
 
