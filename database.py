@@ -1,6 +1,7 @@
 # sql alchemy, we need a postgre sql db
 import logging
-
+from sqlalchemy import func, extract
+import os
 
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Date, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
@@ -9,7 +10,7 @@ from models import Provision as PydanticProvision
 from models import ProvisionType 
 # Database connection details (replace with your actual credentials)
 # Database Connection String
-DATABASE_URL = "mysql+pymysql://t" # get it from env
+DATABASE_URL = f"mysql+pymysql://{os.environ['ZKBUDGET_DB']}" # get it from env
 
 
 engine = create_engine(DATABASE_URL)
@@ -91,6 +92,27 @@ def get_provisions_from_db(limit : int = None):
 def _sqlalchemy_to_pydantic(sqlalchemy_obj):
     return PydanticProvision.model_validate(sqlalchemy_obj.__dict__)
   
+
+def query_for_charts():
+    query = SessionLocal().query(
+        extract('year', Provision.provisionDate).label('year'),
+        extract('month', Provision.provisionDate).label('month'),
+        Provision.provision,
+        func.sum(Provision.provisionAmount).label('total_amount')
+    ).group_by(
+        extract('year', Provision.provisionDate),
+        extract('month', Provision.provisionDate),
+        Provision.provisionType
+    ).order_by(
+        extract('year', Provision.provisionDate),
+        extract('month', Provision.provisionDate),
+        Provision.provisionType
+    )
+
+    results = query.all()
+    provs = [_sqlalchemy_to_pydantic(p) for p in results ]
+    return provs
+
   
 def populate_sqlalchemy_from_pydantic(sqlalchemy_model, pydantic_model, update=False):
     """
