@@ -3,11 +3,7 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  // FIX: We completely emptied the "features" block. 
-  // Codespaces already includes common utilities, git, zsh, and users by default.
-  // Leaving this empty bypasses the broken Yarn/Debian GPG update script.
   "features": {},
-  
   "customizations": {
     "vscode": {
       "extensions": [
@@ -16,9 +12,13 @@
     }
   },
   
-  // PERSISTENCE FIX: This creates a hidden directory inside your persistent repository 
-  // and symlinks it to where Claude saves its login session, so restarts don't log you out.
-  "postCreateCommand": "mkdir -p /workspaces/${localWorkspaceFolderBasename}/.claude_config && mkdir -p ~/.config && ln -sf /workspaces/${localWorkspaceFolderBasename}/.claude_config ~/.config/claude",
+  // AUTOMATION FIX: Looks for the zip in the root or subfolder, extracts it, 
+  // then shifts execution into 'claude_project' to install dependencies.
+  "updateContentCommand": "if [ -f uigen.zip ]; then unzip -o uigen.zip; fi && if [ -f claude_project/uigen.zip ]; then cd claude_project && unzip -o uigen.zip; fi && cd /workspaces/${localWorkspaceFolderBasename}/claude_project && npm run setup",
+
+  // CLAUDE CONFIG PERSISTENCE: Ensures Claude's login credentials persist 
+  // inside the nested project directory structure.
+  "postCreateCommand": "mkdir -p /workspaces/${localWorkspaceFolderBasename}/claude_project/.claude_config && mkdir -p ~/.config && ln -sf /workspaces/${localWorkspaceFolderBasename}/claude_project/.claude_config ~/.config/claude",
   
-  "postStartCommand": "echo 'Container ready! Run \"claude\" in the terminal to begin.'"
+  "postStartCommand": "echo 'Container ready! To start your app, run: cd claude_project && npm run dev'"
 }
