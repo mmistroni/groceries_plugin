@@ -1,0 +1,18 @@
+{
+  "name": "Claude Code Workspace",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    // Ensures common utilities are available
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "postStartCommand": "echo 'Claude Code is ready! Run \"claude\" to begin.'"
+}
