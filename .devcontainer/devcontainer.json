@@ -3,10 +3,11 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "features": {
-    // Ensures common utilities are available
-    "ghcr.io/devcontainers/features/common-utils:2": {}
-  },
+  // FIX: We completely emptied the "features" block. 
+  // Codespaces already includes common utilities, git, zsh, and users by default.
+  // Leaving this empty bypasses the broken Yarn/Debian GPG update script.
+  "features": {},
+  
   "customizations": {
     "vscode": {
       "extensions": [
@@ -14,5 +15,10 @@
       ]
     }
   },
-  "postStartCommand": "echo 'Claude Code is ready! Run \"claude\" to begin.'"
+  
+  // PERSISTENCE FIX: This creates a hidden directory inside your persistent repository 
+  // and symlinks it to where Claude saves its login session, so restarts don't log you out.
+  "postCreateCommand": "mkdir -p /workspaces/${localWorkspaceFolderBasename}/.claude_config && mkdir -p ~/.config && ln -sf /workspaces/${localWorkspaceFolderBasename}/.claude_config ~/.config/claude",
+  
+  "postStartCommand": "echo 'Container ready! Run \"claude\" in the terminal to begin.'"
 }
