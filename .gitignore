@@ -3,3 +3,13 @@ __pycache__
 .pytest_cache
 .vscode
 venv
+# Dependency directories (never commit these)
+node_modules/
+jspm_packages/
+.npm/
+# Local SQLite Database files
+*.db
+*.sqlite
+*.sqlite3
+# OS metadata
+.DS_Store
