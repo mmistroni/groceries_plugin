@@ -1,19 +1,9 @@
 {
-  "name": "Claude Code Workspace",
+  "name": "Groceries Plugin Dev Environment",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "features": {},
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-azuretools.vscode-docker"
-      ]
-    }
-  },
   
-  // CLAUDE CONFIG PERSISTENCE: Retains your Claude session across restarts
-  "postCreateCommand": "mkdir -p /workspaces/${localWorkspaceFolderBasename}/claude_project/.claude_config && mkdir -p ~/.config && ln -sf /workspaces/${localWorkspaceFolderBasename}/claude_project/.claude_config ~/.config/claude",
-  
-  "postStartCommand": "echo 'Container ready instantly! Run: cd claude_project && npm run dev'"
+  // This runs AFTER the repository files are mounted into the container
+  "postCreateCommand": "cd claude_project && unzip -o uigen.zip && npm install && npm run setup"
 }
