@@ -1,9 +1,16 @@
 {
-  "name": "Groceries Plugin Dev Environment",
+  "name": "Claude Course Environment",
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
   
-  // This runs AFTER the repository files are mounted into the container
+  // This executes inside your live workspace once the container starts up
   "postCreateCommand": "cd claude_project && unzip -o uigen.zip && npm install && npm run setup"
 }

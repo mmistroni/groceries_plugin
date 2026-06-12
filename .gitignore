@@ -13,3 +13,8 @@ jspm_packages/
 *.sqlite3
 # OS metadata
 .DS_Store
+claude_project/*
+!claude_project/uigen.zip
+# Standard Node protections just in case
+node_modules/
+npm-debug.log*
