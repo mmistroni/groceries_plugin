@@ -11,6 +11,11 @@
     }
   },
   
+  // Container environment variables
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
+  },
+
   // This executes inside your live workspace once the container starts up
   "postCreateCommand": "cd claude_project && unzip -o uigen.zip && npm install && npm run setup"
 }
