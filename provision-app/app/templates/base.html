@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - {{ settings.PROJECT_NAME }}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Outfit', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c084fc',
+                            400: '#a855f7',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#0f0728',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1) 0%, transparent 60%),
+                        radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
+                        #020617;
+            background-attachment: fixed;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        .glass-card-hover:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.2);
+            transform: translateY(-2px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.6);
+        }
+        
+        /* HTMX Indicator */
+        .htmx-indicator {
+            display: none;
+            opacity: 0;
+            transition: opacity 200ms ease-in-out;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline-block;
+            opacity: 1;
+        }
+        .htmx-request.htmx-indicator {
+            display: inline-block;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="h-full flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 glass-card border-r border-slate-800/80 flex flex-col justify-between shrink-0 hidden md:flex">
+        <div>
+            <!-- Logo Header -->
+            <div class="h-20 flex items-center px-6 border-b border-slate-800/60 gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-wallet text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-outfit font-bold text-lg leading-tight tracking-tight text-white">Groceries</h1>
+                    <span class="text-[10px] uppercase font-semibold text-brand-400 tracking-wider">Provisioning</span>
+                </div>
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1">
+                <a href="/" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl gap-3 transition-all {% if active_page == 'dashboard' %} bg-brand-600/20 text-brand-300 border border-brand-500/20 {% else %} text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 {% endif %}">
+                    <i class="fa-solid fa-chart-line text-base"></i>
+                    Dashboard
+                </a>
+                <a href="/expenses" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl gap-3 transition-all {% if active_page == 'expenses' %} bg-brand-600/20 text-brand-300 border border-brand-500/20 {% else %} text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 {% endif %}">
+                    <i class="fa-solid fa-receipt text-base"></i>
+                    Expenses
+                </a>
+                <a href="/bulk-upload" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl gap-3 transition-all {% if active_page == 'bulk-upload' %} bg-brand-600/20 text-brand-300 border border-brand-500/20 {% else %} text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 {% endif %}">
+                    <i class="fa-solid fa-upload text-base"></i>
+                    Bulk Upload
+                </a>
+                <a href="/admin-settings" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl gap-3 transition-all {% if active_page == 'admin-settings' %} bg-brand-600/20 text-brand-300 border border-brand-500/20 {% else %} text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 {% endif %}">
+                    <i class="fa-solid fa-sliders text-base"></i>
+                    Scheduled Rules
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Environment Footer Info -->
+        <div class="p-4 border-t border-slate-800/60">
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/40 text-xs">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-slate-400">Environment:</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase {% if settings.DATABASE_URL.startswith('sqlite') %} bg-amber-500/10 text-amber-400 border border-amber-500/20 {% else %} bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 {% endif %}">
+                        {% if settings.DATABASE_URL.startswith('sqlite') %} Local SQLite {% else %} Cloud DB {% endif %}
+                    </span>
+                </div>
+                <div class="text-[10px] text-slate-500 truncate" title="{{ settings.DATABASE_URL }}">
+                    {{ settings.DATABASE_URL.split('@')[-1] if '@' in settings.DATABASE_URL else settings.DATABASE_URL }}
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Navigation Bar -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 h-16 glass-card border-t border-slate-800 z-50 flex justify-around items-center px-2">
+        <a href="/" class="flex flex-col items-center gap-0.5 {% if active_page == 'dashboard' %} text-brand-400 {% else %} text-slate-500 {% endif %}">
+            <i class="fa-solid fa-chart-line text-lg"></i>
+            <span class="text-[10px]">Dashboard</span>
+        </a>
+        <a href="/expenses" class="flex flex-col items-center gap-0.5 {% if active_page == 'expenses' %} text-brand-400 {% else %} text-slate-500 {% endif %}">
+            <i class="fa-solid fa-receipt text-lg"></i>
+            <span class="text-[10px]">Expenses</span>
+        </a>
+        <a href="/bulk-upload" class="flex flex-col items-center gap-0.5 {% if active_page == 'bulk-upload' %} text-brand-400 {% else %} text-slate-500 {% endif %}">
+            <i class="fa-solid fa-upload text-lg"></i>
+            <span class="text-[10px]">Bulk Upload</span>
+        </a>
+        <a href="/admin-settings" class="flex flex-col items-center gap-0.5 {% if active_page == 'admin-settings' %} text-brand-400 {% else %} text-slate-500 {% endif %}">
+            <i class="fa-solid fa-sliders text-lg"></i>
+            <span class="text-[10px]">Rules</span>
+        </a>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
+        <!-- Top bar (Header / Loading Indicator) -->
+        <header class="h-20 glass-card border-b border-slate-800/40 px-6 md:px-8 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-4">
+                <!-- Mobile Logo -->
+                <div class="md:hidden w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center">
+                    <i class="fa-solid fa-wallet text-white text-sm"></i>
+                </div>
+                <h2 class="font-outfit font-semibold text-xl text-white">{{ title }}</h2>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- HTMX Spinner -->
+                <div class="htmx-indicator flex items-center gap-2 text-brand-400 text-sm">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span>Loading...</span>
+                </div>
+                
+                <span class="text-xs text-slate-400 hidden sm:inline-block">
+                    <i class="fa-regular fa-clock mr-1"></i> Local time: <span id="current-time"></span>
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Update Time script
+        function updateTime() {
+            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            document.getElementById('current-time').textContent = new Date().toLocaleTimeString(undefined, options);
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<tr id="rule-row-{{ rule.id or 'new' }}" class="bg-brand-950/20 border-y border-brand-500/20">
+    <td class="p-2" colspan="8">
+        <form hx-post="{% if rule.id %}/admin-settings/rules/{{ rule.id }}/edit{% else %}/admin-settings/rules/new{% endif %}" hx-target="#rule-row-{{ rule.id or 'new' }}" hx-swap="outerHTML" class="grid grid-cols-12 gap-3 items-center">
+            <div class="col-span-3">
+                <input type="text" name="description" required value="{{ rule.description or '' }}" placeholder="Description (e.g. Rent)" class="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none">
+            </div>
+            <div class="col-span-2">
+                <select name="rule_type" class="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-lg px-2 py-1.5 text-xs text-white outline-none">
+                    <option value="direct_debit" {% if rule.rule_type == 'direct_debit' %}selected{% endif %}>Direct Debit</option>
+                    <option value="lump_sum" {% if rule.rule_type == 'lump_sum' %}selected{% endif %}>Lump Sum</option>
+                </select>
+            </div>
+            <div class="col-span-1">
+                <input type="number" min="1" max="31" name="day_of_month" required value="{{ rule.day_of_month or 1 }}" placeholder="Day" class="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-lg px-2.5 py-1.5 text-xs text-white text-center outline-none">
+            </div>
+            <div class="col-span-1">
+                <input type="number" name="expense_type" value="{{ rule.expense_type if rule.expense_type is not none else '' }}" placeholder="Type" class="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-lg px-2.5 py-1.5 text-xs text-white text-center outline-none font-mono">
+            </div>
+            <div class="col-span-2">
+                <input type="text" name="user" required value="{{ rule.user or 'directdebit' }}" placeholder="User" class="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-lg px-2 py-1.5 text-xs text-white outline-none">
+            </div>
+            <div class="col-span-1">
+                <input type="number" step="0.01" name="amount" required value="{{ rule.amount or '' }}" placeholder="Amount" class="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-lg px-2.5 py-1.5 text-xs text-white text-right outline-none">
+            </div>
+            <div class="col-span-1 text-center flex items-center justify-center">
+                <input type="checkbox" name="is_active" {% if rule.is_active or not rule.id %}checked{% endif %} value="true" class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-800 bg-slate-950">
+                <span class="text-[10px] text-slate-500 ml-1">Active</span>
+            </div>
+            <div class="col-span-1 text-right flex justify-end gap-1.5">
+                <button type="submit" class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 flex items-center justify-center transition-colors" title="Save">
+                    <i class="fa-solid fa-check text-xs"></i>
+                </button>
+                <button type="button" 
+                        {% if rule.id %}
+                            hx-get="/admin-settings/rules/{{ rule.id }}" 
+                            hx-target="#rule-row-{{ rule.id }}" 
+                            hx-swap="outerHTML"
+                        {% else %}
+                            onclick="document.getElementById('rule-row-new').remove();"
+                        {% endif %}
+                        class="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-colors" title="Cancel">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+        </form>
+    </td>
+</tr>

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Metrics Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Total Spent Card -->
+    <div class="glass-card glass-card-hover rounded-2xl p-6 flex items-center justify-between transition-all duration-300">
+        <div class="space-y-2">
+            <span class="text-sm font-medium text-slate-400">Spent This Month</span>
+            <h3 class="text-3xl font-outfit font-bold text-rose-400">£{{ "%.2f"|format(total_spent_this_month|abs) }}</h3>
+            <span class="text-xs text-slate-500">Sum of all negative entries</span>
+        </div>
+        <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <i class="fa-solid fa-arrow-trend-down text-2xl"></i>
+        </div>
+    </div>
+
+    <!-- Active Direct Debits Card -->
+    <div class="glass-card glass-card-hover rounded-2xl p-6 flex items-center justify-between transition-all duration-300">
+        <div class="space-y-2">
+            <span class="text-sm font-medium text-slate-400">Monthly Direct Debits</span>
+            <h3 class="text-3xl font-outfit font-bold text-violet-400">£{{ "%.2f"|format(active_dd_total|abs) }}</h3>
+            <span class="text-xs text-slate-500">{{ active_dd_count }} active rules</span>
+        </div>
+        <div class="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+            <i class="fa-solid fa-calendar-days text-2xl"></i>
+        </div>
+    </div>
+
+    <!-- Monthly Lump-Sums Card -->
+    <div class="glass-card glass-card-hover rounded-2xl p-6 flex items-center justify-between transition-all duration-300">
+        <div class="space-y-2">
+            <span class="text-sm font-medium text-slate-400">Monthly Lump-Sums</span>
+            <h3 class="text-3xl font-outfit font-bold text-cyan-400">£{{ "%.2f"|format(lump_sum_total|abs) }}</h3>
+            <span class="text-xs text-slate-500">Bulk upload allowances</span>
+        </div>
+        <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <i class="fa-solid fa-money-bill-transfer text-2xl"></i>
+        </div>
+    </div>
+
+    <!-- Net Balance Card -->
+    <div class="glass-card glass-card-hover rounded-2xl p-6 flex items-center justify-between transition-all duration-300">
+        <div class="space-y-2">
+            <span class="text-sm font-medium text-slate-400">Net Balance</span>
+            <h3 class="text-3xl font-outfit font-bold {% if net_balance >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">
+                {% if net_balance >= 0 %}+{% endif %}£{{ "%.2f"|format(net_balance) }}
+            </h3>
+            <span class="text-xs text-slate-500">Income vs. Expenses</span>
+        </div>
+        <div class="w-14 h-14 rounded-2xl {% if net_balance >= 0 %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% else %}bg-rose-500/10 border border-rose-500/20 text-rose-400{% endif %} flex items-center justify-center text-2xl">
+            <i class="fa-solid {% if net_balance >= 0 %}fa-scale-balanced{% else %}fa-scale-unbalanced-flip{% endif %}"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Main Section Split -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column: Quick Add and Info (1/3) -->
+    <div class="lg:col-span-1 space-y-6">
+        <!-- Quick Add Card -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+            <h4 class="font-outfit font-semibold text-lg text-white border-b border-slate-800 pb-3 flex items-center gap-2">
+                <i class="fa-solid fa-plus-minus text-brand-400"></i> Quick Add Expense
+            </h4>
+            
+            <form hx-post="/expenses/quick" hx-target="#recent-expenses-list" hx-swap="afterbegin" hx-on="htmx:afterRequest: this.reset()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Description</label>
+                    <input type="text" name="description" required placeholder="e.g., Tesco groceries" class="w-full bg-slate-900 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 transition-all outline-none">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Amount (£)</label>
+                        <input type="number" step="0.01" name="amount" required placeholder="-15.50" class="w-full bg-slate-900 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 transition-all outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">User</label>
+                        <select name="user" class="w-full bg-slate-900 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-3 py-2.5 text-sm text-white transition-all outline-none">
+                            <option value="simone">simone</option>
+                            <option value="marco">marco</option>
+                            <option value="marco and simone">marco & simone</option>
+                            <option value="directdebit">directdebit</option>
+                            <option value="bulkupload">bulkupload</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Category Code</label>
+                        <input type="number" name="expense_type" placeholder="e.g. 1" class="w-full bg-slate-900 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 transition-all outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
+                        <input type="date" name="date" id="quick-add-date" required class="w-full bg-slate-900 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-sm text-white transition-all outline-none">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-md shadow-brand-500/10 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Entry
+                </button>
+            </form>
+        </div>
+        
+        <!-- Budget Health Meter -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+            <h4 class="font-outfit font-semibold text-lg text-white border-b border-slate-800 pb-3">
+                <i class="fa-solid fa-gauge-high text-brand-400 mr-2"></i>Monthly Allowance Limit
+            </h4>
+            <div class="space-y-4">
+                {% set limit = 2000.0 %}
+                {% set percent = ((total_spent_this_month|abs) / limit * 100)|round %}
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-400">Total spent: £{{ "%.2f"|format(total_spent_this_month|abs) }}</span>
+                    <span class="font-semibold {% if percent > 90 %}text-rose-400{% elif percent > 75 %}text-amber-400{% else %}text-emerald-400{% endif %}">{{ percent }}%</span>
+                </div>
+                
+                <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-800">
+                    <div class="h-full rounded-full bg-gradient-to-r {% if percent > 90 %}from-rose-600 to-red-500{% elif percent > 75 %}from-amber-600 to-amber-400{% else %}from-brand-600 to-indigo-500{% endif %}" style="width: {{ [percent, 100]|min }}%"></div>
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span>Limit: £{{ limit }}</span>
+                    <span>Remaining: £{{ [limit - (total_spent_this_month|abs), 0.0]|max|round(2) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Recent Expenses (2/3) -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="glass-card rounded-2xl p-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                <h4 class="font-outfit font-semibold text-lg text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-brand-400"></i> Recent Expenses
+                </h4>
+                <a href="/expenses" class="text-xs text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1">
+                    View all <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Table of recent expenses -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                            <th class="py-3 px-4">Date</th>
+                            <th class="py-3 px-4">Description</th>
+                            <th class="py-3 px-4">User</th>
+                            <th class="py-3 px-4">Category</th>
+                            <th class="py-3 px-4 text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-expenses-list" class="divide-y divide-slate-800/40 text-sm">
+                        {% for expense in recent_expenses %}
+                        <tr class="hover:bg-slate-900/30 transition-all">
+                            <td class="py-3 px-4 text-slate-400 whitespace-nowrap">
+                                {{ expense.date.strftime('%Y-%m-%d') }}
+                            </td>
+                            <td class="py-3 px-4 font-medium text-white max-w-[150px] truncate" title="{{ expense.description }}">
+                                {{ expense.description }}
+                            </td>
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 border border-slate-800 text-slate-300">
+                                    {{ expense.user }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-slate-400 text-center font-mono">
+                                {{ expense.expense_type if expense.expense_type is not none else '-' }}
+                            </td>
+                            <td class="py-3 px-4 text-right font-semibold whitespace-nowrap {% if expense.amount < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
+                                {% if expense.amount >= 0 %}+{% endif %}£{{ "%.2f"|format(expense.amount) }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-500">
+                                <i class="fa-solid fa-receipt text-3xl mb-2 block"></i>
+                                No expenses logged yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Autofill date field to today
+    document.getElementById('quick-add-date').valueAsDate = new Date();
+</script>
+{% endblock %}
