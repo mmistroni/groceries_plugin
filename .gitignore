@@ -2,7 +2,7 @@
 __pycache__
 .pytest_cache
 .vscode
-venv
+**venv
 # Dependency directories (never commit these)
 node_modules/
 jspm_packages/

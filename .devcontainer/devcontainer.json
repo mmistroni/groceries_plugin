@@ -1,21 +1,30 @@
 {
-  "name": "Claude Course Environment",
-  "build": {
-    "dockerfile": "Dockerfile"
+  "name": "Google Agent & Python Engine",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11",
+      "installTools": true
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+  "remoteEnv": {
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "GOOGLE_APPLICATION_CREDENTIALS": "${localEnv:GOOGLE_APPLICATION_CREDENTIALS}",
+    "PATH": "/home/vscode/.local/bin:${containerEnv:PATH}"
   },
   "customizations": {
     "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvInTerminal": true
+      },
       "extensions": [
-        "dbaeumer.vscode-eslint"
+        "ms-python.python"
       ]
     }
   },
-  
-  // Container environment variables
-  "remoteEnv": {
-    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
-  },
-
-  // This executes inside your live workspace once the container starts up
-  "postCreateCommand": "cd claude_project && unzip -o uigen.zip && npm install && npm run setup"
+  "postCreateCommand": "bash .devcontainer/setup.sh"
 }
