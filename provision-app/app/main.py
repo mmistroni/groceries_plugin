@@ -135,11 +135,15 @@ async def search_expenses(
     category_filter: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
+
+    # 2. Safely parse into an integer only if it's a numeric string
+    category_id = int(category_filter) if isinstance(category_filter, str) and category_filter.isdigit() else None
+    
     expenses = crud.get_expenses(
         db, 
         search=search, 
         user=user_filter or None, 
-        expense_type=category_filter
+        expense_type=category_id
     )
     
     if not expenses:
