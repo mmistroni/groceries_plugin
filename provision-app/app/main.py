@@ -328,12 +328,6 @@ async def submit_bulk_upload(
     return html
 
 # --- ADMIN SETTINGS RULES CRUD ---
-
-@app.get("/admin-settings/rules/{rule_id}", response_class=HTMLResponse)
-async def get_rule_row(request: Request, rule_id: int, db: Session = Depends(get_db)):
-    rule = crud.get_scheduled_rule(db, rule_id)
-    return templates.TemplateResponse(request=request, name="partials/rule_row.html", context={"rule": rule})
-
 @app.get("/admin-settings/rules/new", response_class=HTMLResponse)
 async def new_rule_form(request: Request):
     return templates.TemplateResponse(
@@ -352,7 +346,7 @@ async def create_rule_endpoint(
     day_of_month: int = Form(...),
     amount: float = Form(...),
     user: str = Form(...),
-    expense_type: Optional[int] = Form(None),
+    expense_type: Optional[str] = Form(None),
     is_active: bool = Form(False),
     db: Session = Depends(get_db)
 ):
@@ -360,6 +354,8 @@ async def create_rule_endpoint(
     # but we can parse it from raw form data to be safe:
     form_data = await request.form()
     active_val = form_data.get("is_active") == "true"
+    # Parse expense_type safely
+    category_id = int(expense_type) if expense_type and expense_type.isdigit() else None
     
     rule_in = ScheduledRuleCreate(
         description=description,
@@ -372,6 +368,12 @@ async def create_rule_endpoint(
     )
     rule = crud.create_scheduled_rule(db, rule_in)
     return templates.TemplateResponse(request=request, name="partials/rule_row.html", context={"rule": rule})
+
+@app.get("/admin-settings/rules/{rule_id}", response_class=HTMLResponse)
+async def get_rule_row(request: Request, rule_id: int, db: Session = Depends(get_db)):
+    rule = crud.get_scheduled_rule(db, rule_id)
+    return templates.TemplateResponse(request=request, name="partials/rule_row.html", context={"rule": rule})
+
 
 @app.get("/admin-settings/rules/{rule_id}/edit", response_class=HTMLResponse)
 async def edit_rule_form(request: Request, rule_id: int, db: Session = Depends(get_db)):
