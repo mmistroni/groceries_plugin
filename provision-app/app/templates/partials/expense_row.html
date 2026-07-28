@@ -10,9 +10,18 @@
             {{ expense.user }}
         </span>
     </td>
-    <td class="py-3 px-4 text-slate-400 text-center font-mono">
-        {{ expense.expense_type if expense.expense_type is not none else '-' }}
+
+    <td class="py-3 px-4 text-center whitespace-nowrap">
+        {% if expense.expense_type is not none %}
+            {% set cat_enum = ExpenseTypeEnum(expense.expense_type|int) if expense.expense_type is defined else None %}
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700/50">
+                {{ cat_enum.display_name if cat_enum and cat_enum.display_name is defined else (cat_enum.name.replace('_', ' ').title() if cat_enum else expense.expense_type) }}
+            </span>
+        {% else %}
+            <span class="text-slate-500 text-xs">-</span>
+        {% endif %}
     </td>
+
     <td class="py-3 px-4 text-right font-semibold whitespace-nowrap {% if expense.amount < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
         {% if expense.amount >= 0 %}+{% endif %}£{{ "%.2f"|format(expense.amount) }}
     </td>
