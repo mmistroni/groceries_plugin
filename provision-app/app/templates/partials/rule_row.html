@@ -1,34 +1,45 @@
 <tr id="rule-row-{{ rule.id }}" class="hover:bg-slate-900/30 transition-all">
-    <td class="py-3 px-4 font-semibold text-white">
+    <td class="py-3 px-4 font-medium text-white max-w-[200px] truncate" title="{{ rule.description }}">
         {{ rule.description }}
     </td>
-    <td class="py-3 px-4">
-        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase {% if rule.rule_type == 'direct_debit' %}bg-violet-500/10 text-violet-400 border border-violet-500/20{% else %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% endif %}">
-            {{ 'Direct Debit' if rule.rule_type == 'direct_debit' else 'Lump Sum' }}
+    <td class="py-3 px-4 whitespace-nowrap">
+        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider {% if rule.rule_type == 'direct_debit' %}bg-indigo-500/10 text-indigo-400 border border-indigo-500/20{% else %}bg-cyan-500/10 text-cyan-400 border border-cyan-500/20{% endif %}">
+            {{ rule.rule_type.replace('_', ' ') }}
         </span>
     </td>
-    <td class="py-3 px-4 text-center font-semibold text-white">
+    <td class="py-3 px-4 text-slate-300 whitespace-nowrap text-xs">
         Day {{ rule.day_of_month }}
     </td>
-    <td class="py-3 px-4 text-center font-mono text-slate-400">
-        {{ rule.expense_type if rule.expense_type is not none else '-' }}
+
+    <td class="py-3 px-4 text-center whitespace-nowrap">
+        {% if rule.expense_type is not none %}
+            {% set cat_enum = ExpenseTypeEnum(rule.expense_type|int) if (ExpenseTypeEnum is defined and rule.expense_type is not none) else None %}
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700/50">
+                {{ cat_enum.display_name if cat_enum and cat_enum.display_name is defined else (cat_enum.name.replace('_', ' ').title() if cat_enum else rule.expense_type) }}
+            </span>
+        {% else %}
+            <span class="text-slate-500 text-xs">-</span>
+        {% endif %}
     </td>
-    <td class="py-3 px-4 text-slate-300">
+
+    <td class="py-3 px-4 whitespace-nowrap text-xs text-slate-400">
         {{ rule.user }}
     </td>
-    <td class="py-3 px-4 text-right font-semibold {% if rule.amount < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
+    <td class="py-3 px-4 text-right font-semibold whitespace-nowrap text-slate-200">
         £{{ "%.2f"|format(rule.amount) }}
     </td>
-    <td class="py-3 px-4 text-center">
-        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase {% if rule.is_active %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% else %}bg-slate-800 text-slate-500 border border-slate-700{% endif %}">
-            {{ 'Active' if rule.is_active else 'Inactive' }}
-        </span>
+    <td class="py-3 px-4 whitespace-nowrap text-center">
+        {% if rule.is_active %}
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ACTIVE</span>
+        {% else %}
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-500 border border-slate-700">INACTIVE</span>
+        {% endif %}
     </td>
     <td class="py-3 px-4 whitespace-nowrap text-right text-sm font-medium">
         <button hx-get="/admin-settings/rules/{{ rule.id }}/edit" hx-target="#rule-row-{{ rule.id }}" hx-swap="outerHTML" class="text-brand-400 hover:text-brand-300 mr-3 transition-colors" title="Edit">
             <i class="fa-solid fa-pen"></i>
         </button>
-        <button hx-delete="/admin-settings/rules/{{ rule.id }}" hx-target="#rule-row-{{ rule.id }}" hx-swap="outerHTML" hx-confirm="Are you sure you want to delete this scheduled rule?" class="text-rose-400 hover:text-rose-300 transition-colors" title="Delete">
+        <button hx-delete="/admin-settings/rules/{{ rule.id }}" hx-target="#rule-row-{{ rule.id }}" hx-swap="outerHTML" hx-confirm="Are you sure you want to delete this rule?" class="text-rose-400 hover:text-rose-300 transition-colors" title="Delete">
             <i class="fa-solid fa-trash"></i>
         </button>
     </td>

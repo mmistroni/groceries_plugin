@@ -2,7 +2,6 @@
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Scheduler Simulation Card -->
     <div class="glass-card rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800/40">
         <div class="space-y-1">
             <h3 class="font-outfit font-semibold text-lg text-white">Automated Scheduler Task</h3>
@@ -12,7 +11,7 @@
             <button hx-post="/admin-settings/run-scheduler" 
                     hx-target="#scheduler-results" 
                     hx-indicator="#scheduler-spinner"
-                    class="bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs px-6 py-3 rounded-xl transition-all shadow-md shadow-violet-500/10 flex items-center gap-2">
+                    class="bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs px-6 py-3 rounded-xl transition-all shadow-md shadow-violet-500/10 flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-play"></i> Run Scheduler Task
             </button>
             <span id="scheduler-spinner" class="htmx-indicator text-slate-400 text-xs flex items-center gap-1.5">
@@ -21,10 +20,8 @@
         </div>
     </div>
     
-    <!-- Simulation Results Panel -->
     <div id="scheduler-results" class="empty:hidden"></div>
 
-    <!-- Scheduled Rules Management Card -->
     <div class="glass-card rounded-2xl p-6 space-y-6">
         <div class="flex items-center justify-between border-b border-slate-800/60 pb-6">
             <div>
@@ -35,23 +32,22 @@
             <button hx-get="/admin-settings/rules/new" 
                     hx-target="#rules-list" 
                     hx-swap="afterbegin" 
-                    class="bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs px-5 py-3 rounded-xl transition-all shadow-md shadow-brand-500/10 flex items-center gap-2">
+                    class="bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs px-5 py-3 rounded-xl transition-all shadow-md shadow-brand-500/10 flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-plus text-xs"></i> Add Scheduled Rule
             </button>
         </div>
 
-        <!-- Rules Table -->
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                        <th class="py-3 px-4 w-[25%]">Description</th>
-                        <th class="py-3 px-4 w-[15%]">Rule Type</th>
+                        <th class="py-3 px-4 w-[20%]">Description</th>
+                        <th class="py-3 px-4 w-[12%]">Rule Type</th>
                         <th class="py-3 px-4 w-[10%] text-center">Day of Month</th>
-                        <th class="py-3 px-4 w-[10%] text-center">Category Code</th>
-                        <th class="py-3 px-4 w-[12%]">User</th>
+                        <th class="py-3 px-4 w-[18%] text-center">Category</th>
+                        <th class="py-3 px-4 w-[10%]">User</th>
                         <th class="py-3 px-4 w-[12%] text-right">Default Amount</th>
-                        <th class="py-3 px-4 w-[10%] text-center">Status</th>
+                        <th class="py-3 px-4 w-[8%] text-center">Status</th>
                         <th class="py-3 px-4 w-[10%] text-right">Actions</th>
                     </tr>
                 </thead>
@@ -59,7 +55,7 @@
                     {% for rule in rules %}
                         {% include "partials/rule_row.html" %}
                     {% else %}
-                        <tr>
+                        <tr id="no-rules-row">
                             <td colspan="8" class="py-12 text-center text-slate-500">
                                 <i class="fa-solid fa-sliders text-4xl mb-3 block"></i>
                                 No scheduled rules configured yet.

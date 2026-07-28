@@ -382,7 +382,6 @@ async def create_rule_endpoint(
     amount: float = Form(...),
     user: str = Form(...),
     expense_type: Optional[str] = Form(None),
-    is_active: bool = Form(False),
     db: Session = Depends(get_db)
 ):
     form_data = await request.form()
@@ -395,10 +394,12 @@ async def create_rule_endpoint(
         day_of_month=day_of_month,
         amount=amount,
         user=user,
-        expense_type=expense_type,
+        expense_type=category_id,
         is_active=active_val
     )
     rule = crud.create_scheduled_rule(db, rule_in)
+    
+    # Return single row template for HTMX insertion
     return templates.TemplateResponse(
         request=request, 
         name="partials/rule_row.html", 
@@ -407,6 +408,9 @@ async def create_rule_endpoint(
             "ExpenseTypeEnum": ExpenseTypeEnum
         }
     )
+
+
+
 
 @app.get("/admin-settings/rules/{rule_id}", response_class=HTMLResponse)
 async def get_rule_row(request: Request, rule_id: int, db: Session = Depends(get_db)):
