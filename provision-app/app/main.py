@@ -13,6 +13,7 @@ from sqlalchemy import extract
 from .config import settings
 from .database import engine, SessionLocal, get_db, seed_database
 from .models import Base, ExpenseEntry, ScheduledRule
+from .enums import ExpenseTypeEnum
 from .schemas import ExpenseCreate, ExpenseUpdate, ScheduledRuleCreate, ScheduledRuleUpdate
 from . import crud
 from .scheduler import process_scheduled_insertions
@@ -42,7 +43,6 @@ templates.env.globals["settings"] = settings
 templates.env.globals["datetime"] = datetime
 
 # --- UI PAGES ROUTING ---
-
 @app.get("/", response_class=HTMLResponse)
 async def read_dashboard(request: Request, db: Session = Depends(get_db)):
     # Calculate stats for the current month
@@ -78,9 +78,11 @@ async def read_dashboard(request: Request, db: Session = Depends(get_db)):
             "active_dd_total": active_dd_total,
             "lump_sum_total": lump_sum_total,
             "net_balance": net_balance,
-            "recent_expenses": recent
+            "recent_expenses": recent,
+            "ExpenseTypeEnum": ExpenseTypeEnum  # <--- PASS ENUM TO TEMPLATE HERE
         }
     )
+
 
 @app.get("/expenses", response_class=HTMLResponse)
 async def read_expenses(request: Request, db: Session = Depends(get_db)):
