@@ -26,3 +26,7 @@ Testing Framework:
 - Include a comprehensive suite of unit and integration tests using `pytest` that utilize the SQLite in-memory configuration.
 - Write automated UI functional tests using Selenium to validate crucial frontend pathways (such as modifying an expense amount, triggering bulk edits, and saving the scheduled task configurations). 
 - Provide an explicit setup step in a `README.md` file instructing how to configure the headless browser drivers for the Selenium tests inside the container environment.
+
+
+
+## deployment on 20/8

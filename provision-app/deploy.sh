@@ -1,18 +1,28 @@
-#!/bin/bash
-# deploy.sh - Script to build, push, and deploy the expense provisioning web app to Azure Container Apps
 set -e
 
-# Configuration variables
-RESOURCE_GROUP="rg-groceries-provision"
-LOCATION="eastus"
-RANDOM_ID=$((10000 + RANDOM % 90000))
+# 1. Fresh Resource Group name to bypass the deletion wait
+RESOURCE_GROUP="rg-groceries-provision-v2"
+LOCATION="uksouth"
+
+# 2. Truly dynamic random number generation (prevents duplicate server name errors)
+RANDOM_ID=$(shuf -i 10000-99999 -n 1 2>/dev/null || echo $((10000 + $$ % 89999)))
+
 ACR_NAME="acrprovision${RANDOM_ID}"
 ACA_ENV="aca-env-provision"
 APP_NAME="expense-provision-app"
 PG_SERVER_NAME="pg-provision-db-${RANDOM_ID}"
 PG_DB_NAME="zkbudget"
 PG_USER="dbadmin"
-PG_PASSWORD="SecurePassword123!"  # In a production environment, use KeyVault or secrets
+PG_PASSWORD="${PG_PASSWORD:-}"
+
+if [ -z "$PG_PASSWORD" ]; then
+    printf "Enter PostgreSQL Admin Password: "
+    stty -echo
+    read PG_PASSWORD
+    stty echo
+    echo ""
+fi
+
 
 echo "=========================================================="
 echo " Starting Azure Deployment for Expense Provisioning App"
@@ -31,8 +41,6 @@ fi
 echo "==> Creating Azure Resource Group ($RESOURCE_GROUP) in $LOCATION..."
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 
-# 3. Create PostgreSQL Flexible Server (Burstable tier, absolute cheapest persistent tier)
-# Flexible server supports auto-stop when idle (configured by default for burstable tiers to optimize cost)
 echo "==> Provisioning cost-optimized Azure Database for PostgreSQL (Burstable B1ms tier)..."
 az postgres flexible-server create \
     --resource-group "$RESOURCE_GROUP" \
@@ -42,8 +50,14 @@ az postgres flexible-server create \
     --admin-password "$PG_PASSWORD" \
     --sku-name Standard_B1ms \
     --tier Burstable \
-    --database-name "$PG_DB_NAME" \
     --yes
+
+echo "==> Creating database ($PG_DB_NAME) inside PostgreSQL Flexible Server..."
+az postgres flexible-server db create \
+    --resource-group "$RESOURCE_GROUP" \
+    --server-name "$PG_SERVER_NAME" \
+    --name "$PG_DB_NAME"
+
 
 # 4. Set up firewall rules
 if [ ! -z "$DEV_IP" ]; then
