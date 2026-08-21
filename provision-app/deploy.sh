@@ -13,7 +13,8 @@ APP_NAME="expense-provision-app"
 PG_SERVER_NAME="pg-provision-db-${RANDOM_ID}"
 PG_DB_NAME="zkbudget"
 PG_USER="dbadmin"
-PG_PASSWORD="${PG_PASSWORD:-}"
+PG_PASSWORD="${GROCERIES_DB_PASSWORD}"
+
 
 if [ -z "$PG_PASSWORD" ]; then
     printf "Enter PostgreSQL Admin Password: "
