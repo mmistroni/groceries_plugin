@@ -5,7 +5,8 @@ RESOURCE_GROUP="rg-groceries-provision-v2"
 LOCATION="uksouth"
 
 # 2. Truly dynamic random number generation (prevents duplicate server name errors)
-RANDOM_ID=$(shuf -i 10000-99999 -n 1 2>/dev/null || echo $((10000 + $$ % 89999)))
+RANDOM_ID="72014"
+#$(shuf -i 10000-99999 -n 1 2>/dev/null || echo $((10000 + $$ % 89999)))
 
 ACR_NAME="acrprovision${RANDOM_ID}"
 ACA_ENV="aca-env-provision"
@@ -42,42 +43,51 @@ fi
 echo "==> Creating Azure Resource Group ($RESOURCE_GROUP) in $LOCATION..."
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 
-echo "==> Provisioning cost-optimized Azure Database for PostgreSQL (Burstable B1ms tier)..."
-az postgres flexible-server create \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$PG_SERVER_NAME" \
-    --location "$LOCATION" \
-    --admin-user "$PG_USER" \
-    --admin-password "$PG_PASSWORD" \
-    --sku-name Standard_B1ms \
-    --tier Burstable \
-    --yes
+# 3. Provision PostgreSQL Server & Database (if not already present)
+echo "==> Checking if PostgreSQL server ($PG_SERVER_NAME) exists..."
+if ! az postgres flexible-server show --resource-group "$RESOURCE_GROUP" --name "$PG_SERVER_NAME" >/dev/null 2>&1; then
+    echo "==> Provisioning cost-optimized Azure Database for PostgreSQL (Burstable B1ms tier)..."
+    az postgres flexible-server create \
+        --resource-group "$RESOURCE_GROUP" \
+        --name "$PG_SERVER_NAME" \
+        --location "$LOCATION" \
+        --admin-user "$PG_USER" \
+        --admin-password "$PG_PASSWORD" \
+        --sku-name Standard_B1ms \
+        --tier Burstable \
+        --yes
 
-echo "==> Creating database ($PG_DB_NAME) inside PostgreSQL Flexible Server..."
-az postgres flexible-server db create \
-    --resource-group "$RESOURCE_GROUP" \
-    --server-name "$PG_SERVER_NAME" \
-    --name "$PG_DB_NAME"
-
+    echo "==> Creating database ($PG_DB_NAME) inside PostgreSQL Flexible Server..."
+    az postgres flexible-server db create \
+        --resource-group "$RESOURCE_GROUP" \
+        --server-name "$PG_SERVER_NAME" \
+        --name "$PG_DB_NAME"
+else
+    echo "==> PostgreSQL server ($PG_SERVER_NAME) already exists. Skipping creation."
+fi
 
 # 4. Set up firewall rules
 if [ ! -z "$DEV_IP" ]; then
-    echo "==> Configuring firewall rule for developer IP ($DEV_IP) to connect directly..."
+    echo "==> Configuring firewall rule for developer IP ($DEV_IP)..."
     az postgres flexible-server firewall-rule create \
         --resource-group "$RESOURCE_GROUP" \
-        --name "$PG_SERVER_NAME" \
-        --rule-name AllowDeveloperIP \
+        --server-name "$PG_SERVER_NAME" \
+        --name AllowDeveloperIP \
         --start-ip-address "$DEV_IP" \
-        --end-ip-address "$DEV_IP"
+        --end-ip-address "$DEV_IP" \
+        >/dev/null 2>&1 || true
 fi
 
 echo "==> Configuring firewall rule to allow internal connections from Azure Container Apps..."
 az postgres flexible-server firewall-rule create \
     --resource-group "$RESOURCE_GROUP" \
-    --name "$PG_SERVER_NAME" \
-    --rule-name AllowAllAzureIPs \
+    --server-name "$PG_SERVER_NAME" \
+    --name AllowAllAzureIPs \
     --start-ip-address 0.0.0.0 \
-    --end-ip-address 0.0.0.0
+    --end-ip-address 0.0.0.0 \
+    >/dev/null 2>&1 || true
+
+
 
 # 5. Create Azure Container Registry (ACR) and build image
 echo "==> Provisioning Azure Container Registry ($ACR_NAME)..."
@@ -91,7 +101,7 @@ echo "==> Setting up Container App Environment..."
 az containerapp env create --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" --location "$LOCATION"
 
 # Get ACR credentials
-ACR_PASSWORD=$(az acr list-credentials --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
+ACR_PASSWORD=$(az credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
 
 # Create JDBC/SQLAlchemy style Connection string
 DATABASE_URL="postgresql://$PG_USER:$PG_PASSWORD@$PG_SERVER_NAME.postgres.database.azure.com:5432/$PG_DB_NAME?sslmode=require"
