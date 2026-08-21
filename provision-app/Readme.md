@@ -30,3 +30,4 @@ Testing Framework:
 
 
 ## deployment on 20/8
+https://expense-provision-app.mangoocean-45fee3d8.uksouth.azurecontainerapps.io/

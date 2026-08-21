@@ -17,6 +17,10 @@ echo "=========================================================="
 echo " Deploying Azure Container Apps Cron Job"
 echo "=========================================================="
 
+# Fetch ACR password dynamically using corrected command syntax
+echo "==> Fetching ACR credentials..."
+ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
+
 echo "==> Creating Azure Container Apps Job with Cron trigger..."
 # This Job starts up a single replica, runs the scheduler job module, and terminates
 az containerapp job create \
