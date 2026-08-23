@@ -23,14 +23,7 @@ from .scheduler import process_scheduled_insertions
 async def lifespan(app: FastAPI):
     # Ensure tables exist
     Base.metadata.create_all(bind=engine)
-    # Seed mock data
-    db = SessionLocal()
-    try:
-        seed_database(db)
-    finally:
-        db.close()
     yield
-
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
 # Setup Jinja2 templates

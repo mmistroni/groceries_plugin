@@ -31,3 +31,11 @@ Testing Framework:
 
 ## deployment on 20/8
 https://expense-provision-app.mangoocean-45fee3d8.uksouth.azurecontainerapps.io/
+
+### Wipe out data
+az postgres flexible-server execute \
+  --name pg-provision-db-72014 \
+  --admin-user pgadmin \
+  --admin-password "M1str0ni1" \
+  --database-name postgres \
+  --query-text "DO \$$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP EXECUTE 'TRUNCATE TABLE \"' || r.tablename || '\" RESTART IDENTITY CASCADE;'; END LOOP; END \$$;"
