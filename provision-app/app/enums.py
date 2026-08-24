@@ -3,7 +3,6 @@ from enum import IntEnum
 from sqlalchemy import TypeDecorator, Integer
 
 class ExpenseTypeEnum(IntEnum):
-    HOUSE_INSURANCE = 0
     PHONE_MEDIA = 1
     APPLIANCES_INSURANCE_PENSIONS = 3
     WATER_UTILITIES = 5
@@ -13,6 +12,8 @@ class ExpenseTypeEnum(IntEnum):
     TV_LICENSE = 10
     MORTGAGE_SCHOOLING = 11
     OTHER = 13
+    HOUSE_INSURANCE = 14
+        
 
     @classmethod
     def from_code(cls, code: int | None) -> "ExpenseTypeEnum | None":
