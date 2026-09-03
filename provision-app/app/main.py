@@ -1,64 +1,80 @@
 import os
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, date
 from typing import Optional
 
 from fastapi import FastAPI, Depends, Request, Form, Response
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
 from sqlalchemy import extract
+from sqlalchemy.orm import Session
 
 from .config import settings
-from .database import engine, SessionLocal, get_db, seed_database
-from .models import Base, ExpenseEntry, ScheduledRule
+from .database import get_db, SessionLocal
+from .models import ExpenseEntry, ScheduledRule
 from .enums import ExpenseTypeEnum
 from .schemas import ExpenseCreate, ExpenseUpdate, ScheduledRuleCreate, ScheduledRuleUpdate
 from . import crud
-from .scheduler import process_scheduled_insertions
+from .scheduler import process_scheduled_insertions, run_startup_catchup
 
-# Create database tables and seed if necessary on startup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("startup_scheduler")
+
+
+def run_catchup_rules():
+    """Checks database for active rules due today or missed earlier this month using a synchronous DB session."""
+    today = date.today()
+    logger.info(f"Running startup rule catch-up check as of current date: {today}")
+
+    db = SessionLocal()
+    try:
+        inserted = run_startup_catchup(db)
+        logger.info(f"Catch-up complete. Processed {len(inserted)} rule(s).")
+    except Exception as e:
+        logger.error(f"Error during startup rule execution: {e}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure tables exist
-    Base.metadata.create_all(bind=engine)
+    # Execute startup catch-up task
+    run_catchup_rules()
     yield
+
+
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
-# Setup Jinja2 templates
-# Look up template directory relative to app path
+# Setup Jinja2 templates relative to file directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(current_dir, "templates"))
 
-# Inject settings helper in templates
+# Inject template context globals
 templates.env.globals["settings"] = settings
 templates.env.globals["datetime"] = datetime
-templates.env.globals["ExpenseTypeEnum"] = ExpenseTypeEnum  # Inject globally so all templates have access!
+templates.env.globals["ExpenseTypeEnum"] = ExpenseTypeEnum
+
 
 # --- UI PAGES ROUTING ---
+
 @app.get("/", response_class=HTMLResponse)
 async def read_dashboard(request: Request, db: Session = Depends(get_db)):
-    # Calculate stats for the current month
     today = date.today()
     expenses = db.query(ExpenseEntry).filter(
         extract('year', ExpenseEntry.date) == today.year,
         extract('month', ExpenseEntry.date) == today.month
     ).all()
     
-    # Calculate Spent (negative amounts)
     total_spent = sum(e.amount for e in expenses if e.amount < 0)
-    # Calculate Income/Reimbursements (positive amounts)
     total_income = sum(e.amount for e in expenses if e.amount > 0)
     net_balance = sum(e.amount for e in expenses)
     
-    # Scheduled rules details
     rules = db.query(ScheduledRule).filter(ScheduledRule.is_active == True).all()
     active_dd_count = sum(1 for r in rules if r.rule_type == 'direct_debit')
     active_dd_total = sum(r.amount for r in rules if r.rule_type == 'direct_debit')
     lump_sum_total = sum(r.amount for r in rules if r.rule_type == 'lump_sum')
     
-    # Get 5 recent expenses
     recent = db.query(ExpenseEntry).order_by(ExpenseEntry.date.desc()).limit(5).all()
     
     return templates.TemplateResponse(
@@ -92,6 +108,7 @@ async def read_expenses(request: Request, db: Session = Depends(get_db)):
         }
     )
 
+
 @app.get("/bulk-upload", response_class=HTMLResponse)
 async def read_bulk_upload(request: Request, db: Session = Depends(get_db)):
     rules = crud.get_scheduled_rules(db, active_only=True)
@@ -109,6 +126,7 @@ async def read_bulk_upload(request: Request, db: Session = Depends(get_db)):
         }
     )
 
+
 @app.get("/admin-settings", response_class=HTMLResponse)
 async def read_admin_settings(request: Request, db: Session = Depends(get_db)):
     rules = crud.get_scheduled_rules(db)
@@ -123,9 +141,9 @@ async def read_admin_settings(request: Request, db: Session = Depends(get_db)):
         }
     )
 
+
 # --- HTMX / AJAX CRUD ROUTES ---
 
-# Search / Filter Expenses (returns list rows)
 @app.get("/expenses/search", response_class=HTMLResponse)
 async def search_expenses(
     request: Request,
@@ -134,7 +152,6 @@ async def search_expenses(
     category_filter: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
-
     category_id = int(category_filter) if isinstance(category_filter, str) and category_filter.isdigit() else None
     
     expenses = crud.get_expenses(
@@ -155,7 +172,7 @@ async def search_expenses(
         })
     return html
 
-# Get Single Expense Row (view mode)
+
 @app.get("/expenses/{expense_id}", response_class=HTMLResponse)
 async def get_expense_row(request: Request, expense_id: int, db: Session = Depends(get_db)):
     expense = crud.get_expense(db, expense_id)
@@ -168,7 +185,7 @@ async def get_expense_row(request: Request, expense_id: int, db: Session = Depen
         }
     )
 
-# Create Expense Form (inline)
+
 @app.get("/expenses/new", response_class=HTMLResponse)
 async def new_expense_form(request: Request):
     today_str = date.today().strftime('%Y-%m-%d')
@@ -182,7 +199,7 @@ async def new_expense_form(request: Request):
         }
     )
 
-# Create Expense Submission (inline)
+
 @app.post("/expenses/new", response_class=HTMLResponse)
 async def create_expense_endpoint(
     request: Request,
@@ -211,7 +228,7 @@ async def create_expense_endpoint(
         }
     )
 
-# Quick Add from Dashboard
+
 @app.post("/expenses/quick", response_class=HTMLResponse)
 async def quick_add_endpoint(
     request: Request,
@@ -231,14 +248,12 @@ async def quick_add_endpoint(
         expense_type=expense_type
     )
     expense = crud.create_expense(db, expense_in)
-    
-    # Pass ExpenseTypeEnum into template context!
     return templates.get_template("partials/expense_row.html").render({
         "expense": expense,
         "ExpenseTypeEnum": ExpenseTypeEnum
     })
 
-# Edit Expense Form (inline swap)
+
 @app.get("/expenses/{expense_id}/edit", response_class=HTMLResponse)
 async def edit_expense_form(request: Request, expense_id: int, db: Session = Depends(get_db)):
     expense = crud.get_expense(db, expense_id)
@@ -251,7 +266,7 @@ async def edit_expense_form(request: Request, expense_id: int, db: Session = Dep
         }
     )
 
-# Edit Expense Submission
+
 @app.post("/expenses/{expense_id}/edit", response_class=HTMLResponse)
 async def update_expense_endpoint(
     request: Request,
@@ -281,11 +296,12 @@ async def update_expense_endpoint(
         }
     )
 
-# Delete Expense
+
 @app.delete("/expenses/{expense_id}", response_class=HTMLResponse)
 async def delete_expense_endpoint(expense_id: int, db: Session = Depends(get_db)):
     crud.delete_expense(db, expense_id)
     return Response(status_code=200)
+
 
 # --- BULK PROVISIONING ROUTE ---
 
@@ -297,7 +313,6 @@ async def submit_bulk_upload(
     db: Session = Depends(get_db)
 ):
     form_data = await request.form()
-    
     inserted = []
     active_rules = crud.get_scheduled_rules(db, active_only=True)
     
@@ -354,7 +369,9 @@ async def submit_bulk_upload(
     html += "</div>"
     return html
 
+
 # --- ADMIN SETTINGS RULES CRUD ---
+
 @app.get("/admin-settings/rules/new", response_class=HTMLResponse)
 async def new_rule_form(request: Request):
     return templates.TemplateResponse(
@@ -365,6 +382,7 @@ async def new_rule_form(request: Request):
             "ExpenseTypeEnum": ExpenseTypeEnum
         }
     )
+
 
 @app.post("/admin-settings/rules/new", response_class=HTMLResponse)
 async def create_rule_endpoint(
@@ -392,7 +410,6 @@ async def create_rule_endpoint(
     )
     rule = crud.create_scheduled_rule(db, rule_in)
     
-    # Return single row template for HTMX insertion
     return templates.TemplateResponse(
         request=request, 
         name="partials/rule_row.html", 
@@ -401,8 +418,6 @@ async def create_rule_endpoint(
             "ExpenseTypeEnum": ExpenseTypeEnum
         }
     )
-
-
 
 
 @app.get("/admin-settings/rules/{rule_id}", response_class=HTMLResponse)
@@ -421,14 +436,16 @@ async def get_rule_row(request: Request, rule_id: int, db: Session = Depends(get
 @app.get("/admin-settings/rules/{rule_id}/edit", response_class=HTMLResponse)
 async def edit_rule_form(request: Request, rule_id: int, db: Session = Depends(get_db)):
     rule = crud.get_scheduled_rule(db, rule_id)
+    # Render modal partial for editing
     return templates.TemplateResponse(
         request=request, 
-        name="partials/rule_form.html", 
+        name="partials/edit_rule_modal.html", 
         context={
             "rule": rule,
             "ExpenseTypeEnum": ExpenseTypeEnum
         }
     )
+
 
 @app.post("/admin-settings/rules/{rule_id}/edit", response_class=HTMLResponse)
 async def update_rule_endpoint(
@@ -464,12 +481,13 @@ async def update_rule_endpoint(
         }
     )
 
+
 @app.delete("/admin-settings/rules/{rule_id}", response_class=HTMLResponse)
 async def delete_rule_endpoint(rule_id: int, db: Session = Depends(get_db)):
     crud.delete_scheduled_rule(db, rule_id)
     return Response(status_code=200)
 
-# Simulate scheduler runner manually from settings UI
+
 @app.post("/admin-settings/run-scheduler", response_class=HTMLResponse)
 async def simulate_scheduler(request: Request, db: Session = Depends(get_db)):
     inserted = process_scheduled_insertions(db)
