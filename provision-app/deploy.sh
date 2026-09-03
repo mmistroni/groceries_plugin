@@ -101,7 +101,7 @@ echo "==> Setting up Container App Environment..."
 az containerapp env create --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" --location "$LOCATION"
 
 # Get ACR credentials
-ACR_PASSWORD=$(az credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
+ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
 
 # Create JDBC/SQLAlchemy style Connection string
 DATABASE_URL="postgresql://$PG_USER:$PG_PASSWORD@$PG_SERVER_NAME.postgres.database.azure.com:5432/$PG_DB_NAME?sslmode=require"
