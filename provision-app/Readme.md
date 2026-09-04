@@ -39,3 +39,7 @@ az postgres flexible-server execute \
   --admin-password "M1str0ni1" \
   --database-name postgres \
   --query-text "DO \$$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP EXECUTE 'TRUNCATE TABLE \"' || r.tablename || '\" RESTART IDENTITY CASCADE;'; END LOOP; END \$$;"
+
+  ### checking logs
+
+  az containerapp logs show   --name expense-provision-app   --resource-group rg-groceries-provision-v2   --type console   --tail 100

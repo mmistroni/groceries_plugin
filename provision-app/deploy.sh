@@ -12,7 +12,7 @@ ACR_NAME="acrprovision${RANDOM_ID}"
 ACA_ENV="aca-env-provision"
 APP_NAME="expense-provision-app"
 PG_SERVER_NAME="pg-provision-db-${RANDOM_ID}"
-PG_DB_NAME="zkbudget"
+PG_DB_NAME="postgres"
 PG_USER="dbadmin"
 PG_PASSWORD="${GROCERIES_DB_PASSWORD}"
 
@@ -131,10 +131,3 @@ echo " Note: App will spin down to 0 instances when idle, incurring £0 cost."
 echo " Saved connection details for the Job deployment."
 echo "=========================================================="
 
-# Export variables for Job script
-echo "export RESOURCE_GROUP=\"$RESOURCE_GROUP\"" > .env-deploy
-echo "export ACA_ENV=\"$ACA_ENV\"" >> .env-deploy
-echo "export ACR_NAME=\"$ACR_NAME\"" >> .env-deploy
-echo "export APP_NAME=\"$APP_NAME\"" >> .env-deploy
-echo "export DATABASE_URL=\"$DATABASE_URL\"" >> .env-deploy
-echo "export ACR_PASSWORD=\"$ACR_PASSWORD\"" >> .env-deploy

@@ -9,8 +9,6 @@ APP_NAME="expense-provision-app"
 JOB_NAME="expense-provisioning-job"
 CRON_SCHEDULE="0 5 * * *"  # Runs once a day at 5:00 AM UTC
 
-DATABASE_URL="${DATABASE_URL:-postgresql://user:password@host:5432/dbname}"
-
 echo "=========================================================="
 echo " Deploying Azure Container Apps Cron Job"
 echo "=========================================================="
@@ -18,7 +16,19 @@ echo "=========================================================="
 echo "==> Fetching ACR credentials..."
 ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
 
-echo "==> Creating Azure Container Apps Job with Schedule trigger..."
+echo "==> Fetching DATABASE_URL directly from existing Container App..."
+DATABASE_URL=$(az containerapp show \
+    --name "$APP_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "properties.template.containers[0].env[?name=='DATABASE_URL'].value" \
+    -o tsv)
+
+if [ -z "$DATABASE_URL" ]; then
+    echo "ERROR: Could not retrieve DATABASE_URL from $APP_NAME. Ensure the web app is deployed first."
+    exit 1
+fi
+
+echo "==> Creating or Updating Azure Container Apps Job with Schedule trigger..."
 az containerapp job create \
     --name "$JOB_NAME" \
     --resource-group "$RESOURCE_GROUP" \
@@ -35,7 +45,7 @@ az containerapp job create \
     --registry-password "$ACR_PASSWORD" \
     --env-vars "DATABASE_URL=$DATABASE_URL" "ENV=production" \
     --command "python" \
-    --args "-m app.run_scheduler_job"
+    "--args=-m" "app.run_scheduler_job"
 
 echo "=========================================================="
 echo " Container Apps Job deployed successfully!"

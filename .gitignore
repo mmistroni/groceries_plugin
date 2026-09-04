@@ -18,4 +18,6 @@ claude_project/*
 # Standard Node protections just in case
 node_modules/
 npm-debug.log*
+.env
 .env-deploy
+.env_deploy
