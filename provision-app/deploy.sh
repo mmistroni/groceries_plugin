@@ -43,8 +43,6 @@ fi
 echo "==> Creating Azure Resource Group ($RESOURCE_GROUP) in $LOCATION..."
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 
-# 3. Provision PostgreSQL Server & Database (if not already present)
-echo "==> Checking if PostgreSQL server ($PG_SERVER_NAME) exists..."
 if ! az postgres flexible-server show --resource-group "$RESOURCE_GROUP" --name "$PG_SERVER_NAME" >/dev/null 2>&1; then
     echo "==> Provisioning cost-optimized Azure Database for PostgreSQL (Burstable B1ms tier)..."
     az postgres flexible-server create \
@@ -56,16 +54,9 @@ if ! az postgres flexible-server show --resource-group "$RESOURCE_GROUP" --name 
         --sku-name Standard_B1ms \
         --tier Burstable \
         --yes
-
-    echo "==> Creating database ($PG_DB_NAME) inside PostgreSQL Flexible Server..."
-    az postgres flexible-server db create \
-        --resource-group "$RESOURCE_GROUP" \
-        --server-name "$PG_SERVER_NAME" \
-        --name "$PG_DB_NAME"
 else
     echo "==> PostgreSQL server ($PG_SERVER_NAME) already exists. Skipping creation."
 fi
-
 # 4. Set up firewall rules
 if [ ! -z "$DEV_IP" ]; then
     echo "==> Configuring firewall rule for developer IP ($DEV_IP)..."
