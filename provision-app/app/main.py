@@ -12,6 +12,9 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .database import get_db, SessionLocal
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from .database import engine, SessionLocal, Base, seed_database
 from .models import ExpenseEntry, ScheduledRule
 from .enums import ExpenseTypeEnum
 from .schemas import ExpenseCreate, ExpenseUpdate, ScheduledRuleCreate, ScheduledRuleUpdate
@@ -40,6 +43,21 @@ def run_catchup_rules():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Execute startup catch-up task
+    # Temporary creating db 
+    # 1. Ensure tables exist
+    Base.metadata.create_all(bind=engine)
+    
+    # 2. Seed initial data if empty
+    db = SessionLocal()
+    try:
+        seed_database(db)
+    finally:
+        db.close()
+        
+    # 3. Execute startup catch-up task
+
+
+
     run_catchup_rules()
     yield
 
