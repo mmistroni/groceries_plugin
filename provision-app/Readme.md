@@ -40,6 +40,10 @@ az postgres flexible-server execute \
   --database-name postgres \
   --query-text "DO \$$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP EXECUTE 'TRUNCATE TABLE \"' || r.tablename || '\" RESTART IDENTITY CASCADE;'; END LOOP; END \$$;"
 
+
+ ### install azure
+ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
   ### checking logs
 
   az containerapp logs show   --name expense-provision-app   --resource-group rg-groceries-provision-v2   --type console   --tail 100
