@@ -2,8 +2,11 @@ Description	Rule Type	Day of Month	Category	User	Default Amount	Status	Actions
 Utility Warehouse	direct debit	Day 28	Gas Energy	directdebit	£-133.00	ACTIVE	 
 Car Provision Upload	lump sum	Day 28	Car Transport	bulk upload	£90.00	ACTIVE	 
 GasElectricity Upload	lump sum	Day 28	Gas Energy	bulk upload	£133.00	ACTIVE	 
+
 TV License PRovision Upload	lump sum	Day 28	Tv License	bulk upload	£15.00	ACTIVE	 
+
 Thames Water Provision Upload	lump sum	Day 28	Water Utilities	bulk upload	£52.00	ACTIVE	 
+
 EE TV Broadband Provision Upload	lump sum	Day 28	Phone Media	bulk upload	£65.00	ACTIVE	 
 Council Tax Provision Upload	lump sum	Day 28	Council Tax	bulk upl oad	£229.00	ACTIVE	 
 Home Insurance Provison UPload	lump sum	Day 28	Other	bulk upload	£54.00	ACTIVE	 
