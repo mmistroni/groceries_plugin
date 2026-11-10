@@ -20,28 +20,44 @@ echo "==> Creating Azure Resource Group ($RESOURCE_GROUP) in $LOCATION..."
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 
 # 2. Create Storage Account & File Share for Persistent SQLite DB
-echo "==> Provisioning storage account ($STORAGE_ACCOUNT)..."
+echo "==> Checking storage account ($STORAGE_ACCOUNT)..."
 if ! az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then
+    echo "==> Provisioning storage account..."
     az storage account create \
         --name "$STORAGE_ACCOUNT" \
         --resource-group "$RESOURCE_GROUP" \
         --location "$LOCATION" \
-        --sku Standard_LRS
+        --sku Standard_LRS \
+        --output none
 fi
 
-echo "==> Retrieving storage key and ensuring file share ($SHARE_NAME) exists..."
-STORAGE_KEY=$(az storage account keys list \
-    --account-name "$STORAGE_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --query "[0].value" -o tsv)
+echo "==> Waiting for storage account to be ready and retrieving key..."
+# Loop with a timeout to guarantee it fetches the key as soon as it's available
+STORAGE_KEY=""
+for i in {1..12}; do
+    STORAGE_KEY=$(az storage account keys list \
+        --account-name "$STORAGE_ACCOUNT" \
+        --resource-group "$RESOURCE_GROUP" \
+        --query "[0].value" -o tsv 2>/dev/null || true)
+    
+    if [ -n "$STORAGE_KEY" ]; then
+        break
+    fi
+    echo "Attempt $i: Storage keys not ready yet, retrying in 5 seconds..."
+    sleep 5
+done
 
+if [ -z "$STORAGE_KEY" ]; then
+    echo "ERROR: Failed to retrieve storage account keys after 60 seconds."
+    exit 1
+fi
+
+echo "==> Ensuring file share ($SHARE_NAME) exists..."
 az storage share create \
     --name "$SHARE_NAME" \
     --account-name "$STORAGE_ACCOUNT" \
     --account-key "$STORAGE_KEY" \
-    --fail-on-exist false \
-    >/dev/null 2>&1
-
+    --output none
 # 3. Create Azure Container Registry (ACR) and build image
 echo "==> Provisioning Azure Container Registry ($ACR_NAME)..."
 az acr create --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" --sku Basic --admin-enabled true
