@@ -76,7 +76,6 @@ az containerapp env storage set \
     --name "$ACA_ENV" \
     --resource-group "$RESOURCE_GROUP" \
     --storage-name "sqlitevolume" \
-    --storage-type AzureFile \
     --azure-file-account-name "$STORAGE_ACCOUNT" \
     --azure-file-account-key "$STORAGE_KEY" \
     --azure-file-share-name "$SHARE_NAME" \
@@ -88,7 +87,6 @@ ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].v
 # SQLite Connection string pointing to the mounted persistent volume
 SQLITE_URL="sqlite:///app/data/expenses.db"
 
-# 5. Deploy Web Container App with Volume Mount and Scale-to-Zero
 echo "==> Deploying the Web Container App with SQLite Volume Mount..."
 FQDN=$(az containerapp create \
     --name "$APP_NAME" \
@@ -103,11 +101,8 @@ FQDN=$(az containerapp create \
     --min-replicas 0 \
     --max-replicas 1 \
     --env-vars DATABASE_URL="$SQLITE_URL" ENV="production" \
-    --azure-file-volume-account-name "$STORAGE_ACCOUNT" \
-    --azure-file-volume-account-key "$STORAGE_KEY" \
-    --azure-file-volume-share-name "$SHARE_NAME" \
-    --azure-file-volume-mount-path "/app/data" \
-    --azure-file-volume-name "sqlitevolume" \
+    --volumes name=sqlitevolume,storageType=AzureFile,storageName=sqlitevolume \
+    --volume-mounts mountPath=/app/data,volumeName=sqlitevolume \
     --query "properties.configuration.ingress.fqdn" \
     -o tsv)
 
