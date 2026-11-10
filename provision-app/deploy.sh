@@ -1,104 +1,79 @@
 set -e
 
-# 1. Fresh Resource Group name to bypass the deletion wait
+# 1. Resource Group and Naming
 RESOURCE_GROUP="rg-groceries-provision-v2"
 LOCATION="uksouth"
-
-# 2. Truly dynamic random number generation (prevents duplicate server name errors)
 RANDOM_ID="72014"
-#$(shuf -i 10000-99999 -n 1 2>/dev/null || echo $((10000 + $$ % 89999)))
 
 ACR_NAME="acrprovision${RANDOM_ID}"
 ACA_ENV="aca-env-provision"
 APP_NAME="expense-provision-app"
-PG_SERVER_NAME="pg-provisionsmall"
-PG_DB_NAME="postgres"
-PG_USER="dbadmin"
-PG_PASSWORD="${GROCERIES_DB_PASSWORD}"
-
-
-if [ -z "$PG_PASSWORD" ]; then
-    printf "Enter PostgreSQL Admin Password: "
-    stty -echo
-    read PG_PASSWORD
-    stty echo
-    echo ""
-fi
-
+STORAGE_ACCOUNT="expensestorage${RANDOM_ID}"
+SHARE_NAME="dbshare"
 
 echo "=========================================================="
-echo " Starting Azure Deployment for Expense Provisioning App"
+echo " Starting Azure Deployment for SQLite-backed Expense App"
 echo "=========================================================="
 
-# 1. Fetch Developer's Public IP to secure database access
-echo "==> Fetching developer's public IP address..."
-DEV_IP=$(curl -s https://api.ipify.org)
-if [ -z "$DEV_IP" ]; then
-    echo "WARNING: Could not determine public IP. Database firewall might need manual adjustment."
-else
-    echo "Detected public IP: $DEV_IP"
-fi
-
-# 2. Create Resource Group
+# 1. Create Resource Group
 echo "==> Creating Azure Resource Group ($RESOURCE_GROUP) in $LOCATION..."
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 
-if ! az postgres flexible-server show --resource-group "$RESOURCE_GROUP" --name "$PG_SERVER_NAME" >/dev/null 2>&1; then
-    echo "==> Provisioning cost-optimized Azure Database for PostgreSQL (Burstable B1ms tier)..."
-    az postgres flexible-server create \
+# 2. Create Storage Account & File Share for Persistent SQLite DB
+echo "==> Provisioning storage account ($STORAGE_ACCOUNT)..."
+if ! az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then
+    az storage account create \
+        --name "$STORAGE_ACCOUNT" \
         --resource-group "$RESOURCE_GROUP" \
-        --name "$PG_SERVER_NAME" \
         --location "$LOCATION" \
-        --admin-user "$PG_USER" \
-        --admin-password "$PG_PASSWORD" \
-        --sku-name Standard_B1ms \
-        --tier Burstable \
-        --yes
-else
-    echo "==> PostgreSQL server ($PG_SERVER_NAME) already exists. Skipping creation."
-fi
-# 4. Set up firewall rules
-if [ ! -z "$DEV_IP" ]; then
-    echo "==> Configuring firewall rule for developer IP ($DEV_IP)..."
-    az postgres flexible-server firewall-rule create \
-        --resource-group "$RESOURCE_GROUP" \
-        --server-name "$PG_SERVER_NAME" \
-        --name AllowDeveloperIP \
-        --start-ip-address "$DEV_IP" \
-        --end-ip-address "$DEV_IP" \
-        >/dev/null 2>&1 || true
+        --sku Standard_LRS
 fi
 
-echo "==> Configuring firewall rule to allow internal connections from Azure Container Apps..."
-az postgres flexible-server firewall-rule create \
+echo "==> Retrieving storage key and ensuring file share ($SHARE_NAME) exists..."
+STORAGE_KEY=$(az storage account keys list \
+    --account-name "$STORAGE_ACCOUNT" \
     --resource-group "$RESOURCE_GROUP" \
-    --server-name "$PG_SERVER_NAME" \
-    --name AllowAllAzureIPs \
-    --start-ip-address 0.0.0.0 \
-    --end-ip-address 0.0.0.0 \
-    >/dev/null 2>&1 || true
+    --query "[0].value" -o tsv)
 
+az storage share create \
+    --name "$SHARE_NAME" \
+    --account-name "$STORAGE_ACCOUNT" \
+    --account-key "$STORAGE_KEY" \
+    --fail-on-exist false \
+    >/dev/null 2>&1
 
-
-# 5. Create Azure Container Registry (ACR) and build image
+# 3. Create Azure Container Registry (ACR) and build image
 echo "==> Provisioning Azure Container Registry ($ACR_NAME)..."
 az acr create --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" --sku Basic --admin-enabled true
 
 echo "==> Building and pushing container image to ACR..."
 az acr build --registry "$ACR_NAME" --image "$APP_NAME:latest" .
 
-# 6. Deploy Azure Container App Environment
-echo "==> Setting up Container App Environment..."
-az containerapp env create --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" --location "$LOCATION"
+# 4. Deploy Azure Container App Environment and Link Storage
+echo "==> Setting up Container App Environment ($ACA_ENV)..."
+if ! az containerapp env show --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then
+    az containerapp env create --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" --location "$LOCATION"
+fi
+
+echo "==> Linking storage share to Container App Environment..."
+az containerapp env storage set \
+    --name "$ACA_ENV" \
+    --resource-group "$RESOURCE_GROUP" \
+    --storage-name "sqlitevolume" \
+    --storage-type AzureFile \
+    --azure-file-account-name "$STORAGE_ACCOUNT" \
+    --azure-file-account-key "$STORAGE_KEY" \
+    --azure-file-share-name "$SHARE_NAME" \
+    --access-mode ReadWrite
 
 # Get ACR credentials
 ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
 
-# Create JDBC/SQLAlchemy style Connection string
-DATABASE_URL="postgresql://$PG_USER:$PG_PASSWORD@$PG_SERVER_NAME.postgres.database.azure.com:5432/$PG_DB_NAME?sslmode=require"
+# SQLite Connection string pointing to the mounted persistent volume
+SQLITE_URL="sqlite:///app/data/expenses.db"
 
-# 7. Create Web Container App with scale-to-zero settings (0 replicas minimum)
-echo "==> Deploying the Web Container App with Scale-to-Zero settings (0-1 replicas)..."
+# 5. Deploy Web Container App with Volume Mount and Scale-to-Zero
+echo "==> Deploying the Web Container App with SQLite Volume Mount..."
 FQDN=$(az containerapp create \
     --name "$APP_NAME" \
     --resource-group "$RESOURCE_GROUP" \
@@ -111,14 +86,17 @@ FQDN=$(az containerapp create \
     --registry-password "$ACR_PASSWORD" \
     --min-replicas 0 \
     --max-replicas 1 \
-    --env-vars DATABASE_URL="$DATABASE_URL" ENV="production" \
+    --env-vars DATABASE_URL="$SQLITE_URL" ENV="production" \
+    --azure-file-volume-account-name "$STORAGE_ACCOUNT" \
+    --azure-file-volume-account-key "$STORAGE_KEY" \
+    --azure-file-volume-share-name "$SHARE_NAME" \
+    --azure-file-volume-mount-path "/app/data" \
+    --azure-file-volume-name "sqlitevolume" \
     --query "properties.configuration.ingress.fqdn" \
     -o tsv)
 
 echo "=========================================================="
-echo " Web app deployed successfully!"
+echo " Web app deployed successfully with SQLite on Azure Files!"
 echo " Application URL: http://$FQDN"
-echo " Note: App will spin down to 0 instances when idle, incurring £0 cost."
-echo " Saved connection details for the Job deployment."
+echo " Note: App will spin down to 0 instances when idle (£0 compute cost)."
 echo "=========================================================="
-
