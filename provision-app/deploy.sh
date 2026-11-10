@@ -106,7 +106,7 @@ FQDN=$(az containerapp create \
     --query "properties.configuration.ingress.fqdn" \
     -o tsv)
 
-# 6. Attach Persistent Volume and Mount Path via JSON Specification (Built-in Python only)
+# 6. Attach Persistent Volume and Mount Path via JSON Specification
 echo "==> Attaching persistent SQLite volume mount via JSON update..."
 az containerapp show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --output json > app.json
 
@@ -116,8 +116,21 @@ import json
 with open("app.json", "r") as f:
     doc = json.load(f)
 
-template = doc.setdefault("properties", {}).setdefault("template", {})
-volumes = template.setdefault("volumes", [])
+properties = doc.get("properties")
+if properties is None:
+    properties = {}
+    doc["properties"] = properties
+
+template = properties.get("template")
+if template is None:
+    template = {}
+    properties["template"] = template
+
+volumes = template.get("volumes")
+if volumes is None:
+    volumes = []
+    template["volumes"] = volumes
+
 if not any(v.get("name") == "sqlitevolume" for v in volumes):
     volumes.append({
         "name": "sqlitevolume",
@@ -125,8 +138,16 @@ if not any(v.get("name") == "sqlitevolume" for v in volumes):
         "storageName": "sqlitevolume"
     })
 
-for c in template.get("containers", []):
-    mounts = c.setdefault("volumeMounts", [])
+containers = template.get("containers")
+if containers is None:
+    containers = []
+    template["containers"] = containers
+
+for c in containers:
+    mounts = c.get("volumeMounts")
+    if mounts is None:
+        mounts = []
+        c["volumeMounts"] = mounts
     if not any(vm.get("volumeName") == "sqlitevolume" for vm in mounts):
         mounts.append({
             "volumeName": "sqlitevolume",
