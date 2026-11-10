@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 # 1. Resource Group and Naming
@@ -32,7 +33,6 @@ if ! az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOUR
 fi
 
 echo "==> Waiting for storage account to be ready and retrieving key..."
-# Loop with a timeout to guarantee it fetches the key as soon as it's available
 STORAGE_KEY=""
 for i in {1..12}; do
     STORAGE_KEY=$(az storage account keys list \
@@ -58,6 +58,7 @@ az storage share create \
     --account-name "$STORAGE_ACCOUNT" \
     --account-key "$STORAGE_KEY" \
     --output none
+
 # 3. Create Azure Container Registry (ACR) and build image
 echo "==> Provisioning Azure Container Registry ($ACR_NAME)..."
 az acr create --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" --sku Basic --admin-enabled true
@@ -87,7 +88,8 @@ ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].v
 # SQLite Connection string pointing to the mounted persistent volume
 SQLITE_URL="sqlite:///app/data/expenses.db"
 
-echo "==> Deploying the Web Container App with SQLite Volume Mount..."
+# 5. Deploy Web Container App (Base Deployment)
+echo "==> Deploying the Web Container App..."
 FQDN=$(az containerapp create \
     --name "$APP_NAME" \
     --resource-group "$RESOURCE_GROUP" \
@@ -101,10 +103,23 @@ FQDN=$(az containerapp create \
     --min-replicas 0 \
     --max-replicas 1 \
     --env-vars DATABASE_URL="$SQLITE_URL" ENV="production" \
-    --volumes name=sqlitevolume,storageType=AzureFile,storageName=sqlitevolume \
-    --volume-mounts mountPath=/app/data,volumeName=sqlitevolume \
     --query "properties.configuration.ingress.fqdn" \
     -o tsv)
+
+# 6. Attach Persistent Volume and Mount Path via Update Command
+echo "==> Attaching persistent SQLite volume mount to Container App..."
+az containerapp volume add \
+    --name "$APP_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --storage-type AzureFile \
+    --storage-name "sqlitevolume" \
+    --volume-name "sqlitevolume"
+
+az containerapp mount add \
+    --name "$APP_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --volume-name "sqlitevolume" \
+    --mount-path "/app/data"
 
 echo "=========================================================="
 echo " Web app deployed successfully with SQLite on Azure Files!"
