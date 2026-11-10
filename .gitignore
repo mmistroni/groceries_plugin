@@ -21,3 +21,4 @@ npm-debug.log*
 .env
 .env-deploy
 .env_deploy
+app.json
