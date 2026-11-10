@@ -106,20 +106,39 @@ FQDN=$(az containerapp create \
     --query "properties.configuration.ingress.fqdn" \
     -o tsv)
 
-# 6. Attach Persistent Volume and Mount Path via Update Command
-echo "==> Attaching persistent SQLite volume mount to Container App..."
-az containerapp volume add \
-    --name "$APP_NAME" \
-    --resource-group "$RESOURCE_GROUP" \
-    --storage-type AzureFile \
-    --storage-name "sqlitevolume" \
-    --volume-name "sqlitevolume"
+# 6. Attach Persistent Volume and Mount Path via JSON Specification (Built-in Python only)
+echo "==> Attaching persistent SQLite volume mount via JSON update..."
+az containerapp show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --output json > app.json
 
-az containerapp mount add \
-    --name "$APP_NAME" \
-    --resource-group "$RESOURCE_GROUP" \
-    --volume-name "sqlitevolume" \
-    --mount-path "/app/data"
+python3 -c '
+import json
+
+with open("app.json", "r") as f:
+    doc = json.load(f)
+
+template = doc.setdefault("properties", {}).setdefault("template", {})
+volumes = template.setdefault("volumes", [])
+if not any(v.get("name") == "sqlitevolume" for v in volumes):
+    volumes.append({
+        "name": "sqlitevolume",
+        "storageType": "AzureFile",
+        "storageName": "sqlitevolume"
+    })
+
+for c in template.get("containers", []):
+    mounts = c.setdefault("volumeMounts", [])
+    if not any(vm.get("volumeName") == "sqlitevolume" for vm in mounts):
+        mounts.append({
+            "volumeName": "sqlitevolume",
+            "mountPath": "/app/data"
+        })
+
+with open("app.json", "w") as f:
+    json.dump(doc, f, indent=2)
+'
+
+az containerapp update --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --yaml app.json
+rm -f app.json
 
 echo "=========================================================="
 echo " Web app deployed successfully with SQLite on Azure Files!"
