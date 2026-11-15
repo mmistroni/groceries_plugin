@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
     # Execute startup catch-up task
     # Temporary creating db 
     # 1. Ensure tables exist
-    #Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     
     # 2. Seed initial data if empty
     #db = SessionLocal()
