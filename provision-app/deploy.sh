@@ -86,7 +86,7 @@ az containerapp env storage set \
 ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
 
 # SQLite Connection string pointing to the mounted persistent volume
-SQLITE_URL="sqlite:////app/data/expenses.db"
+SQLITE_URL="sqlite:///./expenses.db"
 
 # 5. Deploy Web Container App (Base Deployment)
 echo "==> Deploying the Web Container App..."
