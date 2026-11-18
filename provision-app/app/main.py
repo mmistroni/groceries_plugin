@@ -42,24 +42,30 @@ def run_catchup_rules():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Execute startup catch-up task
-    # Temporary creating db 
-    # 1. Ensure tables exist
-    Base.metadata.create_all(bind=engine)
-    
-    # 2. Seed initial data if empty
-    #db = SessionLocal()
-    #try:
-    #    seed_database(db)
-    #finally:
-    #    db.close()
+    import traceback
+    try:
+        print("Starting up: Creating database tables...")
+        Base.metadata.create_all(bind=engine)
         
-    # 3. Execute startup catch-up task
-
-
-
-    run_catchup_rules()
+        # Optional: Uncomment if seeding is needed
+        # db = SessionLocal()
+        # try:
+        #     seed_database(db)
+        # finally:
+        #     db.close()
+            
+        print("Starting up: Running catchup rules...")
+        run_catchup_rules()
+        
+    except Exception as e:
+        print("CRITICAL ERROR during startup lifespan:")
+        traceback.print_exc()
+        raise e  # Re-raise so FastAPI stops instead of running in a broken state
+        
     yield
+    
+    print("Shutting down application...")
+
 
 
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
