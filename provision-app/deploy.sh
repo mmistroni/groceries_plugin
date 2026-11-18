@@ -10,17 +10,17 @@ ACR_NAME="acrprovision${RANDOM_ID}"
 ACA_ENV="aca-env-provision"
 APP_NAME="expense-provision-app"
 STORAGE_ACCOUNT="expensestorage${RANDOM_ID}"
-SHARE_NAME="dbshare"
+BLOB_CONTAINER="dbcontainer"
 
 echo "=========================================================="
-echo " Starting Azure Deployment for SQLite-backed Expense App"
+echo " Starting Azure Deployment (Local SQLite + Blob Sync)"
 echo "=========================================================="
 
 # 1. Create Resource Group
 echo "==> Creating Azure Resource Group ($RESOURCE_GROUP) in $LOCATION..."
-az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+az group create --name "$RESOURCE_GROUP" --location "$LOCATION" --output none
 
-# 2. Create Storage Account & File Share for Persistent SQLite DB
+# 2. Create Storage Account & Blob Container for Persistence
 echo "==> Checking storage account ($STORAGE_ACCOUNT)..."
 if ! az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then
     echo "==> Provisioning storage account..."
@@ -52,43 +52,35 @@ if [ -z "$STORAGE_KEY" ]; then
     exit 1
 fi
 
-echo "==> Ensuring file share ($SHARE_NAME) exists..."
-az storage share create \
-    --name "$SHARE_NAME" \
+echo "==> Ensuring blob container ($BLOB_CONTAINER) exists..."
+az storage container create \
+    --name "$BLOB_CONTAINER" \
     --account-name "$STORAGE_ACCOUNT" \
     --account-key "$STORAGE_KEY" \
     --output none
 
+STORAGE_CONN="DefaultEndpointsProtocol=https;AccountName=${STORAGE_ACCOUNT};AccountKey=${STORAGE_KEY};EndpointSuffix=core.windows.net"
+
 # 3. Create Azure Container Registry (ACR) and build image
 echo "==> Provisioning Azure Container Registry ($ACR_NAME)..."
-az acr create --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" --sku Basic --admin-enabled true
+az acr create --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" --sku Basic --admin-enabled true --output none
 
 echo "==> Building and pushing container image to ACR..."
-az acr build --registry "$ACR_NAME" --image "$APP_NAME:latest" .
+az acr build --registry "$ACR_NAME" --image "$APP_NAME:latest" . --output none
 
-# 4. Deploy Azure Container App Environment and Link Storage
+# 4. Deploy Azure Container App Environment
 echo "==> Setting up Container App Environment ($ACA_ENV)..."
 if ! az containerapp env show --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then
-    az containerapp env create --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" --location "$LOCATION"
+    az containerapp env create --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" --location "$LOCATION" --output none
 fi
-
-echo "==> Linking storage share to Container App Environment..."
-az containerapp env storage set \
-    --name "$ACA_ENV" \
-    --resource-group "$RESOURCE_GROUP" \
-    --storage-name "sqlitevolume" \
-    --azure-file-account-name "$STORAGE_ACCOUNT" \
-    --azure-file-account-key "$STORAGE_KEY" \
-    --azure-file-share-name "$SHARE_NAME" \
-    --access-mode ReadWrite
 
 # Get ACR credentials
 ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
 
-# SQLite Connection string pointing to the mounted persistent volume
+# SQLite Connection string pointing to the container's local SSD
 SQLITE_URL="sqlite:///./expenses.db"
 
-# 5. Deploy Web Container App (Base Deployment)
+# 5. Deploy Web Container App (Self-contained, no volume mounts)
 echo "==> Deploying the Web Container App..."
 FQDN=$(az containerapp create \
     --name "$APP_NAME" \
@@ -102,67 +94,12 @@ FQDN=$(az containerapp create \
     --registry-password "$ACR_PASSWORD" \
     --min-replicas 0 \
     --max-replicas 1 \
-    --env-vars DATABASE_URL="$SQLITE_URL" ENV="production" \
+    --env-vars DATABASE_URL="$SQLITE_URL" AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN" ENV="production" \
     --query "properties.configuration.ingress.fqdn" \
     -o tsv)
 
-# 6. Attach Persistent Volume and Mount Path via JSON Specification
-echo "==> Attaching persistent SQLite volume mount via JSON update..."
-az containerapp show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --output json > app.json
-
-python3 -c '
-import json
-
-with open("app.json", "r") as f:
-    doc = json.load(f)
-
-properties = doc.get("properties")
-if properties is None:
-    properties = {}
-    doc["properties"] = properties
-
-template = properties.get("template")
-if template is None:
-    template = {}
-    properties["template"] = template
-
-volumes = template.get("volumes")
-if volumes is None:
-    volumes = []
-    template["volumes"] = volumes
-
-if not any(v.get("name") == "sqlitevolume" for v in volumes):
-    volumes.append({
-        "name": "sqlitevolume",
-        "storageType": "AzureFile",
-        "storageName": "sqlitevolume"
-    })
-
-containers = template.get("containers")
-if containers is None:
-    containers = []
-    template["containers"] = containers
-
-for c in containers:
-    mounts = c.get("volumeMounts")
-    if mounts is None:
-        mounts = []
-        c["volumeMounts"] = mounts
-    if not any(vm.get("volumeName") == "sqlitevolume" for vm in mounts):
-        mounts.append({
-            "volumeName": "sqlitevolume",
-            "mountPath": "/app/data"
-        })
-
-with open("app.json", "w") as f:
-    json.dump(doc, f, indent=2)
-'
-
-az containerapp update --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --yaml app.json
-rm -f app.json
-
 echo "=========================================================="
-echo " Web app deployed successfully with SQLite on Azure Files!"
+echo " Web app deployed successfully with Local SQLite + Blob Sync!"
 echo " Application URL: http://$FQDN"
 echo " Note: App will spin down to 0 instances when idle (£0 compute cost)."
 echo "=========================================================="
