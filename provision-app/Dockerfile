@@ -31,6 +31,13 @@ ENV PATH=/root/.local/bin:$PATH
 # Copy application source code
 COPY app/ ./app/
 
+COPY . .
+RUN chmod +x /app/entrypoint.sh
+
+ENV DB_FILE=/app/expenses.db \
+    BLOB_CONTAINER=dbcontainer \
+    BLOB_NAME=expenses.db
+
 # Expose default HTTP port
 EXPOSE 8000
 
@@ -39,5 +46,6 @@ ENV PORT=8000
 ENV ENV=production
 ENV DATABASE_URL=""
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 # Start the FastAPI application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,5 +1,5 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 # 1. Resource Group and Naming
 RESOURCE_GROUP="rg-groceries-provision-v2"
@@ -39,7 +39,7 @@ for i in {1..12}; do
         --account-name "$STORAGE_ACCOUNT" \
         --resource-group "$RESOURCE_GROUP" \
         --query "[0].value" -o tsv 2>/dev/null || true)
-    
+
     if [ -n "$STORAGE_KEY" ]; then
         break
     fi
@@ -74,32 +74,58 @@ if ! az containerapp env show --name "$ACA_ENV" --resource-group "$RESOURCE_GROU
     az containerapp env create --name "$ACA_ENV" --resource-group "$RESOURCE_GROUP" --location "$LOCATION" --output none
 fi
 
-# Get ACR credentials
 ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
-
-# SQLite Connection string pointing to the container's local SSD
+IMAGE_TAG="$ACR_NAME.azurecr.io/$APP_NAME:latest"
 SQLITE_URL="sqlite:///./expenses.db"
 
-# 5. Deploy Web Container App (Self-contained, no volume mounts)
-echo "==> Deploying the Web Container App..."
-FQDN=$(az containerapp create \
-    --name "$APP_NAME" \
-    --resource-group "$RESOURCE_GROUP" \
-    --environment "$ACA_ENV" \
-    --image "$ACR_NAME.azurecr.io/$APP_NAME:latest" \
-    --target-port 8000 \
-    --ingress external \
-    --registry-server "$ACR_NAME.azurecr.io" \
-    --registry-username "$ACR_NAME" \
-    --registry-password "$ACR_PASSWORD" \
-    --min-replicas 0 \
-    --max-replicas 1 \
-    --env-vars DATABASE_URL="$SQLITE_URL" AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN" ENV="production" \
-    --query "properties.configuration.ingress.fqdn" \
-    -o tsv)
+# 5. Create or Update Web Container App (Self-contained, no volume mounts)
+if ! az containerapp show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then
+    echo "==> Creating Web Container App..."
+    FQDN=$(az containerapp create \
+        --name "$APP_NAME" \
+        --resource-group "$RESOURCE_GROUP" \
+        --environment "$ACA_ENV" \
+        --image "$IMAGE_TAG" \
+        --target-port 8000 \
+        --ingress external \
+        --registry-server "$ACR_NAME.azurecr.io" \
+        --registry-username "$ACR_NAME" \
+        --registry-password "$ACR_PASSWORD" \
+        --min-replicas 0 \
+        --max-replicas 1 \
+        --env-vars \
+            DATABASE_URL="$SQLITE_URL" \
+            DB_FILE="/app/expenses.db" \
+            BLOB_CONTAINER="$BLOB_CONTAINER" \
+            BLOB_NAME="expenses.db" \
+            AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN" \
+            ENV="production" \
+        --query "properties.configuration.ingress.fqdn" \
+        -o tsv)
+else
+    echo "==> Updating existing Web Container App..."
+    az containerapp update \
+        --name "$APP_NAME" \
+        --resource-group "$RESOURCE_GROUP" \
+        --image "$IMAGE_TAG" \
+        --set-env-vars \
+            DATABASE_URL="$SQLITE_URL" \
+            DB_FILE="/app/expenses.db" \
+            BLOB_CONTAINER="$BLOB_CONTAINER" \
+            BLOB_NAME="expenses.db" \
+            AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN" \
+            ENV="production" \
+        --output none
+
+    FQDN=$(az containerapp show \
+        --name "$APP_NAME" \
+        --resource-group "$RESOURCE_GROUP" \
+        --query "properties.configuration.ingress.fqdn" \
+        -o tsv)
+fi
 
 echo "=========================================================="
 echo " Web app deployed successfully with Local SQLite + Blob Sync!"
-echo " Application URL: http://$FQDN"
+echo " Application URL: https://$FQDN"
 echo " Note: App will spin down to 0 instances when idle (£0 compute cost)."
 echo "=========================================================="
